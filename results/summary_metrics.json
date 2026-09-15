@@ -1,0 +1,163 @@
+{
+  "data_status": "DEMONSTRATION ONLY -- PLACEHOLDER VULNERABILITY DATA",
+  "data_mode": "development",
+  "is_provisional": "True",
+  "solver": "appsi_highs",
+  "objective": 3.501166103321685,
+  "resources": [
+    "water",
+    "food"
+  ],
+  "barangay_count": 182,
+  "hub_count": 6,
+  "active_hubs": 4,
+  "hmax": 4,
+  "eps_min": 0.1,
+  "lambda": {
+    "water": 2.0,
+    "food": 0.5
+  },
+  "lambda_note": "PROVISIONAL SENSITIVITY-ANALYSIS VALUES, NOT CALIBRATED",
+  "fulfillment_summary": {
+    "overall": {
+      "min": 0.1,
+      "max": 1.0,
+      "mean": 0.6097810844891253
+    },
+    "water": {
+      "min": 0.1,
+      "max": 1.0,
+      "mean": 0.6463833730338054
+    },
+    "food": {
+      "min": 0.1,
+      "max": 1.0,
+      "mean": 0.6799676459095045
+    }
+  },
+  "fairness": {
+    "min_phi": 0.1,
+    "nash_welfare_score": -154.22790668780112,
+    "disparity_violations": 11376
+  },
+  "sensitivity_sweep": [
+    {
+      "supply_factor": 1.0,
+      "feasible": true,
+      "objective": 3.501166103321685,
+      "min_phi_overall": 0.1,
+      "mean_phi_overall": 0.6097810844891253,
+      "min_phi_water": 0.1,
+      "mean_phi_water": 0.6463833730338054,
+      "min_phi_food": 0.1,
+      "mean_phi_food": 0.6799676459095045
+    },
+    {
+      "supply_factor": 0.8,
+      "feasible": true,
+      "objective": 4.013944221317952,
+      "min_phi_overall": 0.1,
+      "mean_phi_overall": 0.5196565498925401,
+      "min_phi_water": 0.1,
+      "mean_phi_water": 0.5558618778738686,
+      "min_phi_food": 0.1,
+      "mean_phi_food": 0.5826073615387063
+    },
+    {
+      "supply_factor": 0.6,
+      "feasible": true,
+      "objective": 4.7532918170830545,
+      "min_phi_overall": 0.1,
+      "mean_phi_overall": 0.3986910317106545,
+      "min_phi_water": 0.1,
+      "mean_phi_water": 0.4334459542429623,
+      "min_phi_food": 0.1,
+      "mean_phi_food": 0.46078291494793666
+    },
+    {
+      "supply_factor": 0.4,
+      "feasible": true,
+      "objective": 6.021101432383479,
+      "min_phi_overall": 0.1,
+      "mean_phi_overall": 0.2367319269252348,
+      "min_phi_water": 0.1,
+      "mean_phi_water": 0.26275798799812894,
+      "min_phi_food": 0.1,
+      "mean_phi_food": 0.2787805863360005
+    },
+    {
+      "supply_factor": 0.2,
+      "feasible": false,
+      "objective": null,
+      "min_phi_overall": null,
+      "mean_phi_overall": null,
+      "min_phi_water": null,
+      "mean_phi_water": null,
+      "min_phi_food": null,
+      "mean_phi_food": null
+    },
+    {
+      "supply_factor": 0.1,
+      "feasible": false,
+      "objective": null,
+      "min_phi_overall": null,
+      "mean_phi_overall": null,
+      "min_phi_water": null,
+      "mean_phi_water": null,
+      "min_phi_food": null,
+      "mean_phi_food": null
+    }
+  ],
+  "scenario_results": [
+    {
+      "name": "Scenario 1 -- Normal",
+      "feasible": true,
+      "objective": 3.501166103321685,
+      "min_phi": 0.1,
+      "mean_phi": 0.6097810844891253
+    },
+    {
+      "name": "Scenario 2 -- Moderate Disaster",
+      "feasible": true,
+      "objective": 4.1723709245086775,
+      "min_phi": 0.1,
+      "mean_phi": 0.49229855813987544
+    },
+    {
+      "name": "Scenario 3 -- Severe Disaster",
+      "feasible": true,
+      "objective": 5.2822520999989955,
+      "min_phi": 0.1,
+      "mean_phi": 0.3226797359895342
+    },
+    {
+      "name": "Scenario 4 -- Extreme Disaster",
+      "feasible": false,
+      "objective": null,
+      "min_phi": null,
+      "mean_phi": null
+    },
+    {
+      "name": "Scenario 5 -- Uneven Impact",
+      "feasible": true,
+      "objective": 3.704462971195413,
+      "min_phi": 0.1,
+      "mean_phi": 0.5756428712422923
+    },
+    {
+      "name": "Scenario 6 -- Water-Critical Event",
+      "feasible": true,
+      "objective": 5.765594658443035,
+      "min_phi": 0.1,
+      "mean_phi": 0.2627579879981289
+    },
+    {
+      "name": "Scenario 7 -- Food Shortage",
+      "feasible": true,
+      "objective": 3.756692003850664,
+      "min_phi": 0.1,
+      "mean_phi": 0.27878058633600045
+    }
+  ],
+  "validation_passed": true
+}

@@ -1,0 +1,13 @@
+Core Sphere Standard Multipliers (S_k)
+
+Water Supply (WASH):
+S_water = 15 L / person / day (minimum for drinking, cooking, and hygiene)
+
+Food & Nutrition:
+S_food = 2,100 kcal / person / day (initial basic energy intake standard)
+
+Shelter & Settlement:
+S_shelter = 3.5 m² / person (covered living space requirement)
+
+Solid Waste Management:
+S_waste = 100 L / 10 households / day (~2–3 L per person daily collection volume)
