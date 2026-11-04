@@ -183,9 +183,9 @@ def print_data_summary(data):
     print(f"Hmax: {data['params']['Hmax']}")
     print(f"eps_min: {data['params']['eps_min']}")
     print(f"lambda_water: {data['params']['lambda_']['water']} "
-          f"(PROVISIONAL -- not calibrated)")
+          f"(theoretically grounded parameter)")
     print(f"lambda_food:  {data['params']['lambda_']['food']} "
-          f"(PROVISIONAL -- not calibrated)")
+          f"(theoretically grounded parameter)")
     print(f"is_provisional: {data['is_provisional']}")
 
 

@@ -1,0 +1,87 @@
+\documentclass[12pt,oneside]{book}
+
+\usepackage[utf8]{inputenc}
+\usepackage[left=1.2in,right=1in,top=1in,bottom=.8in]{geometry}
+\usepackage{parskip}
+\setlength{\parindent}{0.5in}
+\usepackage{emptypage}
+\usepackage{graphicx}
+\usepackage{chngcntr}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{booktabs}
+\usepackage{multirow}
+\usepackage[linesnumbered,ruled,vlined]{algorithm2e}
+\usepackage{float}
+\usepackage[round]{natbib}
+
+\renewcommand{\contentsname}{Table of Contents}
+\counterwithout{table}{chapter}
+\counterwithout{figure}{chapter}
+\setcounter{secnumdepth}{3}
+
+\begin{document}
+\cleardoublepage
+
+% ==============================================================================
+% TITLE PAGE
+% ==============================================================================
+\begin{titlepage}
+    \begin{center}
+        \includegraphics[width=1.5in]{figs/addu.pdf}\\[1cm]
+        {\huge\textbf{Exact Optimization of City-Wide Disaster Relief: A Two-Stage MILP for Resource Allocation in Davao City}\par}
+        \vspace{1.2in}
+        {\large
+            Prince Paul C. Misa\\
+            Laurence N. Labor\\
+            Jan Kenneth Gerona\par
+        }
+        \vspace{1.2in}
+        {\large
+            ATENEO DE DAVAO UNIVERSITY\\
+            SCHOOL OF ARTS AND SCIENCES\\
+            DAVAO CITY\par
+        }
+        \vspace{0.8in}
+        April 2026
+    \end{center}
+\end{titlepage}
+
+% ==============================================================================
+% FRONT MATTER (Roman Numerals: i, ii, iii...)
+% ==============================================================================
+\frontmatter
+
+% --- ABSTRACT ---
+\chapter*{Abstract}
+\addcontentsline{toc}{chapter}{Abstract}
+\input{chapters/abstract}   % or \input{docs/abstract}
+
+% --- ACKNOWLEDGEMENTS ---
+\chapter*{Acknowledgement}
+\addcontentsline{toc}{chapter}{Acknowledgement}
+\input{chapters/acknowledgement}   % or \input{docs/acknowledgement}
+
+% --- LISTS ---
+\tableofcontents
+\listoffigures
+\listoftables
+
+% ==============================================================================
+% MAIN MATTER (Arabic Numerals: 1, 2, 3...)
+% ==============================================================================
+\mainmatter
+
+\include{chapters/introduction}
+\include{chapters/literature_review}
+\include{chapters/methodology}
+\include{chapters/Results_and_Discussion}
+\include{chapters/conclusions_and_recommendations}  % Chapter 5
+
+% ==============================================================================
+% BIBLIOGRAPHY
+% ==============================================================================
+\bibliographystyle{apalike}
+\bibliography{references}
+
+\end{document}

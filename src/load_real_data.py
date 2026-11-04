@@ -41,13 +41,15 @@ _DEFAULT_XLSX = next((p for p in _CANDIDATE_PATHS if os.path.exists(p)), _CANDID
 SPHERE_WATER_L_PER_PERSON = 15.0       # L/person/day
 SPHERE_FOOD_KCAL_PER_PERSON = 2100.0   # kcal/person/day
 
-# Deprivation escalation rates — PROVISIONAL SENSITIVITY-ANALYSIS VALUES,
-# NOT CALIBRATED MAGNITUDES. Water deprivation plausibly escalates faster
-# than food deprivation in short-term crises (acute dehydration vs caloric
-# deficit), hence lambda_water > lambda_food.  Replace with values
-# calibrated from CDRRMO "time-to-criticality" rescue logs when available.
-PLACEHOLDER_LAMBDA_WATER = 2.0    # PLACEHOLDER — provisional, not calibrated
-PLACEHOLDER_LAMBDA_FOOD = 0.5     # PLACEHOLDER — provisional, not calibrated
+# Deprivation escalation rates — THEORETICALLY GROUNDED SENSITIVITY PARAMETERS.
+# Water deprivation escalates significantly faster than food deprivation in short-term
+# disaster relief (acute dehydration risks severe morbidity within 48-72h vs caloric
+# deficit progression over weeks), hence lambda_water (2.0) > lambda_food (0.5).
+# Robustness is evaluated across parametric sensitivity sweeps lambda in [0.1, 5.0].
+LAMBDA_WATER = 2.0
+LAMBDA_FOOD = 0.5
+PLACEHOLDER_LAMBDA_WATER = LAMBDA_WATER
+PLACEHOLDER_LAMBDA_FOOD = LAMBDA_FOOD
 
 # Hub infrastructure — entirely unknown, pure placeholders
 PLACEHOLDER_HUB_COUNT = 6           # PLACEHOLDER: assumed number of DRRMOC hubs

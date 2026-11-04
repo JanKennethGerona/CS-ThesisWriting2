@@ -128,7 +128,7 @@ def build_tangent_segments(lambda_dict,
         segs = []
         for phi0 in breakpoints:
             u0 = 1 - phi0
-            f_u0 = math.exp(lam * u0)
+            f_u0 = math.exp(lam * u0) - 1.0  # ZERO-BASELINE SHIFT (Chapter 3, Eq 3.3)
             slope_u = lam * math.exp(lam * u0)  # d f / d u
             # z >= f(u0) + slope_u*(u - u0)  where u = 1 - phi_jr
             m_k = slope_u

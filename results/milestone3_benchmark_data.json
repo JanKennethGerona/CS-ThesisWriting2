@@ -1,0 +1,209 @@
+{
+  "models_summary": {
+    "Deprivation-Min (Proposed)": {
+      "objective": 2.8282971634582217,
+      "min_phi": 0.1,
+      "mean_phi": 0.16971436943589363,
+      "std_phi": 0.1288738589926367,
+      "nash_score": -359.1299356483039,
+      "disparity_violations": 6765,
+      "t_build": 0.07424360001459718,
+      "t_solve": 0.8488737999869045,
+      "mem_mb": 0.0,
+      "active_hubs": 4,
+      "tangent_gap": 0.005889746925842765
+    },
+    "Proportional Baseline": {
+      "objective": 3.189280319769264,
+      "min_phi": 0.3333333333333333,
+      "mean_phi": 0.3333333333333333,
+      "std_phi": 0.0,
+      "nash_score": -199.947436537596,
+      "disparity_violations": 0,
+      "t_build": 0.001,
+      "t_solve": 0.00010790000669658184,
+      "mem_mb": 0.0,
+      "active_hubs": 6,
+      "tangent_gap": 0.0
+    },
+    "Weighted-Proportional": {
+      "objective": 2.8760863064603908,
+      "min_phi": 0.13064252883138563,
+      "mean_phi": 0.244057471443248,
+      "std_phi": 0.12357282735127824,
+      "nash_score": -279.29225030654237,
+      "disparity_violations": 4525,
+      "t_build": 0.001,
+      "t_solve": 0.0003876000118907541,
+      "mem_mb": 0.0,
+      "active_hubs": 4,
+      "tangent_gap": 0.0
+    },
+    "Max Utilitarian": {
+      "objective": 4.701207678088162,
+      "min_phi": 0.1,
+      "mean_phi": 0.7221974086592626,
+      "std_phi": 0.4149665947715784,
+      "nash_score": -129.11920386513026,
+      "disparity_violations": 7181,
+      "t_build": 0.07424360001459718,
+      "t_solve": 0.28905660001328215,
+      "mem_mb": 0.0,
+      "active_hubs": 4,
+      "tangent_gap": 0.0
+    },
+    "Pure Egalitarian / Max-Min": {
+      "objective": 3.189280319769268,
+      "min_phi": 0.33333333333333315,
+      "mean_phi": 0.33333333333333326,
+      "std_phi": 4.9033027855575105e-17,
+      "nash_score": -199.947436537596,
+      "disparity_violations": 0,
+      "t_build": 0.07424360001459718,
+      "t_solve": 0.28933490000781603,
+      "mem_mb": 0.0,
+      "active_hubs": 4,
+      "tangent_gap": 0.0
+    }
+  },
+  "scenarios": [
+    {
+      "scenario": "Scenario 1 -- Normal",
+      "description": "100% demand, 100% supply (baseline)",
+      "feasible": true,
+      "objective": 2.8282971634582217,
+      "min_phi": 0.1,
+      "mean_phi": 0.16971436943589363,
+      "std_phi": 0.1288738589926367,
+      "t_solve": 0.8885321999841835
+    },
+    {
+      "scenario": "Scenario 2 -- Moderate Disaster",
+      "description": "100% demand, 75% supply",
+      "feasible": true,
+      "objective": 3.593324528578356,
+      "min_phi": 0.1,
+      "mean_phi": 0.13521903433252996,
+      "std_phi": 0.08531950250629343,
+      "t_solve": 0.8653636999952141
+    },
+    {
+      "scenario": "Scenario 3 -- Severe Disaster",
+      "description": "100% demand, 50% supply",
+      "feasible": true,
+      "objective": 4.559718766755007,
+      "min_phi": 0.1,
+      "mean_phi": 0.11346370612015003,
+      "std_phi": 0.05105382586320631,
+      "t_solve": 1.0900978999852668
+    },
+    {
+      "scenario": "Scenario 4 -- Extreme Disaster",
+      "description": "100% demand, 25% supply",
+      "feasible": false,
+      "objective": null,
+      "min_phi": null,
+      "mean_phi": null,
+      "std_phi": null,
+      "t_solve": 1.5016683999856468
+    },
+    {
+      "scenario": "Scenario 5 -- Uneven Impact",
+      "description": "First 20% of barangays at 1.5x demand, rest at baseline",
+      "feasible": true,
+      "objective": 3.099068941780414,
+      "min_phi": 0.1,
+      "mean_phi": 0.18381902298550515,
+      "std_phi": 0.15979787125619982,
+      "t_solve": 2.0426263000117615
+    },
+    {
+      "scenario": "Scenario 6 -- Water-Critical Event",
+      "description": "Water supply at 40%, food supply at 100%",
+      "feasible": true,
+      "objective": 4.84914336335505,
+      "min_phi": 0.1,
+      "mean_phi": 0.11240503548987756,
+      "std_phi": 0.03118363631433787,
+      "t_solve": 1.1165660999831744
+    },
+    {
+      "scenario": "Scenario 7 -- Food Shortage",
+      "description": "Food supply at 40%, water supply at 100%",
+      "feasible": true,
+      "objective": 3.015891589603513,
+      "min_phi": 0.1,
+      "mean_phi": 0.11137023697438826,
+      "std_phi": 0.043476681058364094,
+      "t_solve": 0.9027872000006028
+    }
+  ],
+  "sensitivity": [
+    {
+      "supply_factor": 1.0,
+      "feasible": true,
+      "objective": 2.8282971634582217,
+      "min_phi_overall": 0.1,
+      "mean_phi_overall": 0.16971436943589363,
+      "min_phi_water": 0.1,
+      "mean_phi_water": 0.2269528410599877,
+      "min_phi_food": 0.1,
+      "mean_phi_food": 0.19246504674178844
+    },
+    {
+      "supply_factor": 0.8,
+      "feasible": true,
+      "objective": 3.4287364369785953,
+      "min_phi_overall": 0.1,
+      "mean_phi_overall": 0.14136226227916857,
+      "min_phi_water": 0.1,
+      "mean_phi_water": 0.17987988381479333,
+      "min_phi_food": 0.1,
+      "mean_phi_food": 0.1608743856087876
+    },
+    {
+      "supply_factor": 0.6,
+      "feasible": true,
+      "objective": 4.138253623594419,
+      "min_phi_overall": 0.1,
+      "mean_phi_overall": 0.11810440018206031,
+      "min_phi_water": 0.1,
+      "mean_phi_water": 0.14397903823573832,
+      "min_phi_food": 0.1,
+      "mean_phi_food": 0.13303069759184832
+    },
+    {
+      "supply_factor": 0.4,
+      "feasible": true,
+      "objective": 5.036818479799795,
+      "min_phi_overall": 0.1,
+      "mean_phi_overall": 0.10821429029195041,
+      "min_phi_water": 0.1,
+      "mean_phi_water": 0.1125141824847363,
+      "min_phi_food": 0.1,
+      "mean_phi_food": 0.11159048893195282
+    },
+    {
+      "supply_factor": 0.2,
+      "feasible": false,
+      "objective": null,
+      "min_phi_overall": null,
+      "mean_phi_overall": null,
+      "min_phi_water": null,
+      "mean_phi_water": null,
+      "min_phi_food": null,
+      "mean_phi_food": null
+    },
+    {
+      "supply_factor": 0.1,
+      "feasible": false,
+      "objective": null,
+      "min_phi_overall": null,
+      "mean_phi_overall": null,
+      "min_phi_water": null,
+      "mean_phi_water": null,
+      "min_phi_food": null,
+      "mean_phi_food": null
+    }
+  ]
+}

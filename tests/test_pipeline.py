@@ -37,7 +37,7 @@ if _SRC_DIR not in sys.path:
 import pyomo.environ as pyo
 from data_loader import load_data, DataValidationError
 from load_real_data import (
-    load_barangay_data, SPHERE_WATER_L_PER_PERSON,
+    load_barangay_data, detect_provisional_status, SPHERE_WATER_L_PER_PERSON,
     SPHERE_FOOD_KCAL_PER_PERSON, RESOURCES,
 )
 from davao_rap_milp import (
@@ -50,6 +50,12 @@ from davao_rap_milp import (
 from validation import (
     validate_solution, validate_tangent_approximation,
     compare_breakpoint_counts,
+)
+from baselines import (
+    compute_baseline_accessibility,
+    compute_baseline_decentralized,
+    compute_accessibility_scores,
+    compare_urban_vs_upland,
 )
 
 
@@ -142,18 +148,26 @@ def test_data_integrity(t):
                f"extra={actual - expected_districts}")
 
     # Vulnerability Data Source check
-    if df["Vulnerability Data Source"].str.contains("PLACEHOLDER").all():
-        t.ok("is_provisional correctly detected (all PLACEHOLDER)")
+    if not detect_provisional_status(df) and "CDRRMO" in df["Vulnerability Data Source"].iloc[0]:
+        t.ok("empirical hazard data correctly identified (non-provisional)")
     else:
-        t.fail("is_provisional detection")
+        t.fail("is_provisional detection on real data")
+
+    # Check provisional detection function on simulated placeholder
+    mock_df = df.copy()
+    mock_df.loc[0, "Vulnerability Data Source"] = "PLACEHOLDER - TEST"
+    if detect_provisional_status(mock_df):
+        t.ok("provisional status detector correctly flags placeholder data")
+    else:
+        t.fail("provisional status detector failed on placeholder")
 
     # Data loader API
     try:
         data = load_data(mode="development")
-        if data["is_provisional"]:
-            t.ok("data_loader development mode works")
+        if not data["is_provisional"] and len(data["barangays"]) == 182:
+            t.ok("data_loader development mode works with calibrated data")
         else:
-            t.fail("data_loader", "should be provisional")
+            t.fail("data_loader", f"unexpected data state: is_provisional={data['is_provisional']}")
     except Exception as e:
         t.fail("data_loader", str(e))
 
@@ -276,11 +290,11 @@ def test_multi_commodity_model(t):
         for r in model.R:
             phi_jr = pyo.value(model.phi_r[j, r])
             z_jr = pyo.value(model.z[j, r])
-            true_val = math.exp(lambda_dict[r] * (1.0 - phi_jr))
+            true_val = math.exp(lambda_dict[r] * (1.0 - phi_jr)) - 1.0
             if z_jr > true_val + 1e-6:
                 all_ok = False
     if all_ok:
-        t.ok("deprivation under-approximation (z_jr <= e^(lambda*(1-phi)))")
+        t.ok("deprivation under-approximation (z_jr <= e^(lambda*(1-phi)) - 1)")
     else:
         t.fail("deprivation under-approximation")
 
@@ -450,18 +464,29 @@ def test_placeholder_protection(t):
 
     try:
         data = load_data(mode="research")
-        # If we get here, it either has real data or failed to detect placeholders
         if not data["is_provisional"]:
             t.ok("research mode: accepted (data is real)")
         else:
             t.fail("research mode should reject provisional data")
-    except DataValidationError as e:
-        if "placeholder" in str(e).lower():
-            t.ok("research mode correctly rejects placeholder data")
-        else:
-            t.fail("research mode rejection", str(e))
     except Exception as e:
         t.fail("research mode", str(e))
+
+    # Also verify that research mode rejects placeholder data when present
+    try:
+        from unittest.mock import patch
+        mock_df = load_barangay_data()
+        mock_df.loc[0, "Vulnerability Data Source"] = "PLACEHOLDER - TEST"
+        with patch("data_loader.load_barangay_data", return_value=mock_df):
+            try:
+                load_data(mode="research")
+                t.fail("research mode should reject placeholder data")
+            except DataValidationError as e:
+                if "placeholder" in str(e).lower():
+                    t.ok("research mode correctly rejects placeholder data")
+                else:
+                    t.fail("research mode rejection message", str(e))
+    except Exception as e:
+        t.fail("research mode placeholder test", str(e))
 
 
 def test_real_data_model(t):
@@ -519,6 +544,132 @@ def test_real_data_model(t):
         t.fail("validation on real data", str(val["errors"][:3]))
 
 
+def test_accessibility_baseline(t):
+    """Test accessibility-driven baseline."""
+    print("\n--- Accessibility Baseline ---")
+
+    data = load_data(mode="development")
+    df = data["barangay_details"]
+    barangays = data["barangays"]
+    resources = data["resources"]
+    district_map = dict(zip(df["Barangay"], df["District"]))
+    urban_rural_map = dict(zip(df["Barangay"], df["Urban/Rural"]))
+
+    # Accessibility scores in valid range
+    scores = compute_accessibility_scores(barangays, district_map, urban_rural_map)
+    if all(0 < v <= 1.0 for v in scores.values()):
+        t.ok("accessibility scores in (0, 1]")
+    else:
+        t.fail("accessibility scores range")
+
+    # Run accessibility baseline
+    result = compute_baseline_accessibility(
+        barangays, resources, data["D"], data["S"], data["hubs"],
+        data["params"], district_map, urban_rural_map
+    )
+
+    # All phi_j in [0, 1]
+    if all(0 <= v <= 1.0 + 1e-6 for v in result["phi_j"].values()):
+        t.ok("accessibility baseline phi_j in [0, 1]")
+    else:
+        t.fail("accessibility baseline phi_j range")
+
+    # Baseline should have strong positive correlation with accessibility
+    corr = result["metrics"]["corr_phi_accessibility"]
+    if corr > 0.5:
+        t.ok(f"accessibility baseline: strong positive corr ({corr:.4f})")
+    else:
+        t.fail(f"accessibility baseline correlation", f"corr={corr:.4f}")
+
+    # Primary MILP should have near-zero or negative correlation
+    # (need to solve the model for this)
+    hubs = data["hubs"]
+    D, S, P, params = data["D"], data["S"], data["P"], data["params"]
+    segments = build_tangent_segments(params["lambda_"], num_breakpoints=21)
+    model = build_model(hubs, barangays, resources, D, S, P, params, segments)
+    res, _ = solve_model(model)
+    phi_j, _ = compute_overall_fulfillment(model, resources)
+
+    import numpy as np
+    acc_list = [scores[j] for j in barangays]
+    phi_list = [phi_j[j] for j in barangays]
+    primary_corr = float(np.corrcoef(acc_list, phi_list)[0, 1])
+
+    if abs(primary_corr) < 0.5:
+        t.ok(f"primary MILP: weak/no accessibility correlation ({primary_corr:+.4f})")
+    else:
+        t.fail("primary MILP accessibility correlation",
+               f"corr={primary_corr:.4f} (expected |corr| < 0.5)")
+
+    # Urban vs upland comparison produces valid structure
+    uu = compare_urban_vs_upland(barangays, phi_j, district_map)
+    if "urban_core_mean" in uu and "upland_mean" in uu and uu["urban_core_count"] > 0:
+        t.ok("urban vs upland comparison valid")
+    else:
+        t.fail("urban vs upland comparison")
+
+
+def test_decentralized_baseline(t):
+    """Test decentralized request-based baseline."""
+    print("\n--- Decentralized Baseline ---")
+
+    data = load_data(mode="development")
+    df = data["barangay_details"]
+    barangays = data["barangays"]
+    resources = data["resources"]
+    district_map = dict(zip(df["Barangay"], df["District"]))
+    urban_rural_map = dict(zip(df["Barangay"], df["Urban/Rural"]))
+
+    # Run with small n_runs for speed
+    result = compute_baseline_decentralized(
+        barangays, resources, data["D"], data["S"], data["hubs"],
+        data["params"], district_map, urban_rural_map,
+        n_runs=10, seed=42
+    )
+
+    # Correct number of runs
+    if len(result["run_results"]) == 10:
+        t.ok("decentralized baseline: 10 Monte Carlo runs")
+    else:
+        t.fail("decentralized baseline run count",
+               f"got {len(result['run_results'])}")
+
+    # Mean phi_j has entries for all barangays
+    if len(result["mean_phi_j"]) == len(barangays):
+        t.ok("decentralized baseline: all barangays have mean phi")
+    else:
+        t.fail("decentralized baseline barangay count")
+
+    # Aggregate metrics present
+    agg = result["aggregate_metrics"]
+    required_keys = {"min_phi", "mean_phi", "gini", "corr_phi_accessibility"}
+    if required_keys.issubset(agg.keys()):
+        t.ok("decentralized baseline: aggregate metrics complete")
+    else:
+        t.fail("decentralized baseline metrics",
+               f"missing: {required_keys - set(agg.keys())}")
+
+    # Positive correlation with accessibility (urban inflation bias)
+    corr = agg["corr_phi_accessibility"]
+    if corr > 0.3:
+        t.ok(f"decentralized baseline: positive accessibility corr ({corr:.4f})")
+    else:
+        t.fail("decentralized baseline accessibility correlation",
+               f"corr={corr:.4f}")
+
+    # Reproducibility: same seed gives same results
+    result2 = compute_baseline_decentralized(
+        barangays, resources, data["D"], data["S"], data["hubs"],
+        data["params"], district_map, urban_rural_map,
+        n_runs=10, seed=42
+    )
+    if abs(result["aggregate_metrics"]["mean_phi"]["mean"]
+           - result2["aggregate_metrics"]["mean_phi"]["mean"]) < 1e-10:
+        t.ok("decentralized baseline: reproducible with same seed")
+    else:
+        t.fail("decentralized baseline reproducibility")
+
+
 if __name__ == "__main__":
     print("=" * 60)
     print("  Multi-Commodity MILP -- Automated Test Suite")
@@ -535,6 +686,8 @@ if __name__ == "__main__":
     test_baseline_comparison(t)
     test_placeholder_protection(t)
     test_real_data_model(t)
+    test_accessibility_baseline(t)
+    test_decentralized_baseline(t)
 
     success = t.summary()
     sys.exit(0 if success else 1)

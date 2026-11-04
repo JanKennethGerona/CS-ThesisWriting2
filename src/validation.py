@@ -64,11 +64,11 @@ def validate_solution(model, lambda_dict, resources, post_processed_phi,
             phi_jr = pyo.value(model.phi_r[j, r])
             z_jr = pyo.value(model.z[j, r])
             lam = lambda_dict[r]
-            true_val = math.exp(lam * (1.0 - phi_jr))
+            true_val = math.exp(lam * (1.0 - phi_jr)) - 1.0
             if z_jr > true_val + tol:
                 results["errors"].append(
                     f"Over-approximation: z[{j},{r}] = {z_jr:.6f} > "
-                    f"e^(lambda*(1-phi)) = {true_val:.6f}"
+                    f"e^(lambda*(1-phi))-1 = {true_val:.6f}"
                 )
                 results["passed"] = False
             gap = true_val - z_jr
@@ -178,7 +178,7 @@ def validate_tangent_approximation(lambda_, breakpoints, test_points=None):
     segments = []
     for phi0 in breakpoints:
         u0 = 1 - phi0
-        f_u0 = math.exp(lambda_ * u0)
+        f_u0 = math.exp(lambda_ * u0) - 1.0
         slope_u = lambda_ * math.exp(lambda_ * u0)
         m_k = slope_u
         b_k = f_u0 - slope_u * u0
@@ -187,7 +187,7 @@ def validate_tangent_approximation(lambda_, breakpoints, test_points=None):
     results = []
     for phi in test_points:
         u = 1 - phi
-        exact = math.exp(lambda_ * u)
+        exact = math.exp(lambda_ * u) - 1.0
         # Approximation = max over all tangent lines
         approx = max(m * u + b for m, b in segments)
         abs_err = exact - approx  # should be >= 0 (under-approximation)
