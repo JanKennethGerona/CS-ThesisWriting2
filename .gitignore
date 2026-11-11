@@ -2,3 +2,11 @@ __pycache__/
 *.py[cod]
 *$py.class
 .ipynb_checkpoints/
+
+# Backup files
+*.backup.xlsx
+*.bak
+
+# OS artifacts
+.DS_Store
+Thumbs.db

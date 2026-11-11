@@ -10,12 +10,10 @@ Design Principles:
 """
 
 import os
-import sys
 import json
 import math
 import numpy as np
 import matplotlib.pyplot as plt
-import matplotlib.ticker as ticker
 
 _SRC_DIR = os.path.dirname(os.path.abspath(__file__))
 _REPO_ROOT = os.path.dirname(_SRC_DIR)
