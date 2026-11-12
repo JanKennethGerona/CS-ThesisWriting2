@@ -9,6 +9,7 @@ Usage:
 """
 
 import math
+from typing import Any
 import pyomo.environ as pyo
 
 
@@ -17,7 +18,8 @@ class SolutionValidationError(Exception):
     pass
 
 
-def validate_solution(model, lambda_dict, resources, post_processed_phi,
+# -- Function: Validate mathematical constraints and epigraph conditions of solved model --
+def validate_solution(model: Any, lambda_dict, resources, post_processed_phi,
                       tol=1e-6):
     """
     Comprehensive post-solve validation.
@@ -159,6 +161,7 @@ def validate_solution(model, lambda_dict, resources, post_processed_phi,
     return results
 
 
+# -- Function: Validate tangent approximation accuracy against exact exponential --
 def validate_tangent_approximation(lambda_, breakpoints, test_points=None):
     """
     Compute tangent approximation error at test points.
@@ -203,6 +206,7 @@ def validate_tangent_approximation(lambda_, breakpoints, test_points=None):
     return results
 
 
+# -- Function: Compare tangent approximation errors across multiple breakpoint counts --
 def compare_breakpoint_counts(lambda_, counts=(5, 11, 21, 41)):
     """
     Compare tangent approximation accuracy across different breakpoint counts.
@@ -225,6 +229,7 @@ def compare_breakpoint_counts(lambda_, counts=(5, 11, 21, 41)):
     return results
 
 
+# -- Function: Pretty-print solution validation results --
 def print_validation_results(results):
     """Pretty-print validation results."""
     status = "PASSED" if results["passed"] else "FAILED"

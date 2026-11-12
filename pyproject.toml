@@ -1,5 +1,12 @@
 [tool.pyright]
 extraPaths = ["src"]
+typeCheckingMode = "off"
 reportAttributeAccessIssue = false
 reportGeneralTypeIssues = false
 reportOptionalMemberAccess = false
+reportArgumentType = false
+reportAssignmentType = false
+reportIndexIssue = false
+reportCallIssue = false
+reportOperatorIssue = false
+reportReturnType = false

@@ -55,10 +55,12 @@ from baselines import (
 RESULTS_DIR = os.path.join(_REPO_ROOT, "results")
 
 
+# -- Function: Ensure results directory exists --
 def ensure_results_dir():
     os.makedirs(RESULTS_DIR, exist_ok=True)
 
 
+# -- Function: Run full optimization pipeline --
 def run_pipeline(xlsx_path=None, mode="development"):
     """Run the full multi-commodity MILP pipeline."""
 
@@ -297,7 +299,16 @@ def run_pipeline(xlsx_path=None, mode="development"):
 
     # CSV export
     csv_path = os.path.join(RESULTS_DIR, "barangay_allocations.csv")
-    with open(csv_path, "w", newline="", encoding="utf-8") as f:
+    try:
+        f_csv = open(csv_path, "w", newline="", encoding="utf-8")
+    except PermissionError:
+        fallback_csv_path = os.path.join(RESULTS_DIR, "barangay_allocations_new.csv")
+        print(f"  [WARNING] '{csv_path}' is open in another program (e.g. Excel).")
+        print(f"  Saving results to fallback: {fallback_csv_path}")
+        f_csv = open(fallback_csv_path, "w", newline="", encoding="utf-8")
+        csv_path = fallback_csv_path
+
+    with f_csv as f:
         if is_provisional:
             f.write("# WARNING: DEMONSTRATION ONLY -- PLACEHOLDER "
                     "VULNERABILITY DATA\n")
@@ -328,7 +339,24 @@ def run_pipeline(xlsx_path=None, mode="development"):
 
     # JSON export
     json_path = os.path.join(RESULTS_DIR, "summary_metrics.json")
-    summary = {
+
+    # Build per-resource fulfillment summary
+    fulfillment_summary: dict[str, Any] = {
+        "overall": {
+            "min": min(phi_j.values()),
+            "max": max(phi_j.values()),
+            "mean": sum(phi_j.values()) / len(phi_j),
+        },
+    }
+    for r in resources:
+        vals = [pyo.value(model.phi_r[j, r]) for j in model.J]
+        fulfillment_summary[r] = {
+            "min": min(vals),
+            "max": max(vals),
+            "mean": sum(vals) / len(vals),
+        }
+
+    summary: dict[str, Any] = {
         "data_status": ("DEMONSTRATION ONLY -- PLACEHOLDER VULNERABILITY DATA"
                         if is_provisional
                         else "VALIDATED RESEARCH RUN"),
@@ -351,13 +379,7 @@ def run_pipeline(xlsx_path=None, mode="development"):
             "time-to-criticality hierarchy (Sphere Project / Holguín-Veras et al.); "
             "evaluated via parametric sensitivity sweeps."
         ),
-        "fulfillment_summary": {
-            "overall": {
-                "min": min(phi_j.values()),
-                "max": max(phi_j.values()),
-                "mean": sum(phi_j.values()) / len(phi_j),
-            },
-        },
+        "fulfillment_summary": fulfillment_summary,
         "fairness": {
             "min_phi": fairness_results["primary_fairness"]["phi_min (Max-Min proxy)"],
             "nash_welfare_score": fairness_results["primary_fairness"]["nash_welfare_score"],
@@ -377,20 +399,21 @@ def run_pipeline(xlsx_path=None, mode="development"):
             k: v for k, v in dec_agg.items()
         },
     }
-    # Add per-resource summary
-    for r in resources:
-        vals = [pyo.value(model.phi_r[j, r]) for j in model.J]
-        summary["fulfillment_summary"][r] = {
-            "min": min(vals),
-            "max": max(vals),
-            "mean": sum(vals) / len(vals),
-        }
 
-    with open(json_path, "w", encoding="utf-8") as f:
+    try:
+        f_json = open(json_path, "w", encoding="utf-8")
+    except PermissionError:
+        fallback_json_path = os.path.join(RESULTS_DIR, "summary_metrics_new.json")
+        print(f"  [WARNING] '{json_path}' is open in another program.")
+        print(f"  Saving results to fallback: {fallback_json_path}")
+        f_json = open(fallback_json_path, "w", encoding="utf-8")
+        json_path = fallback_json_path
+
+    with f_json as f:
         json.dump(summary, f, indent=2, default=str)
     print(f"  JSON: {json_path}")
 
-    # -- Done --
+    # -- 14. Pipeline completion and verification summary --
     print(f"\n[13/13] Pipeline complete.")
     if is_provisional:
         print("\n" + "=" * 70)
@@ -419,6 +442,7 @@ def run_pipeline(xlsx_path=None, mode="development"):
     }
 
 
+# -- Entry Point: Command-line execution and argument parsing --
 if __name__ == "__main__":
     mode = "development"
     xlsx_path = None

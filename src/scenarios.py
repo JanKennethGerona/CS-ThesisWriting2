@@ -9,6 +9,7 @@ Usage:
 """
 
 
+# -- Function: Retrieve disaster scenario definitions --
 def get_all_scenarios():
     """
     Returns a list of scenario definitions.
@@ -67,6 +68,7 @@ def get_all_scenarios():
     ]
 
 
+# -- Function: Apply disaster scenario scaling to supply and demand --
 def apply_scenario(scenario, D, S, barangays, resources):
     """
     Apply a scenario to the demand and supply dicts.

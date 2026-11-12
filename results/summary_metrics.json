@@ -1,6 +1,6 @@
 {
   "data_status": "VALIDATED RESEARCH RUN",
-  "data_mode": "research",
+  "data_mode": "development",
   "is_provisional": "False",
   "hazard_data_source": "Davao City CDRRMO / Project NOAH 182-Barangay Flood Hazard Assessment",
   "solver": "appsi_highs",

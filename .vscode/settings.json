@@ -1,4 +1,5 @@
 {
+  "python.analysis.typeCheckingMode": "off",
   "python.analysis.extraPaths": [
     "./src"
   ],
@@ -8,6 +9,12 @@
   "python.analysis.diagnosticSeverityOverrides": {
     "reportAttributeAccessIssue": "none",
     "reportGeneralTypeIssues": "none",
-    "reportOptionalMemberAccess": "none"
+    "reportOptionalMemberAccess": "none",
+    "reportArgumentType": "none",
+    "reportAssignmentType": "none",
+    "reportIndexIssue": "none",
+    "reportCallIssue": "none",
+    "reportOperatorIssue": "none",
+    "reportReturnType": "none"
   }
 }

@@ -34,6 +34,7 @@ class DataValidationError(Exception):
     pass
 
 
+# -- Function: Validate data integrity and schema --
 def validate_data(df):
     """
     Strict data validation. Returns list of error strings.
@@ -104,6 +105,7 @@ def validate_data(df):
     return errors
 
 
+# -- Function: Load and validate dataset with mode gating --
 def load_data(xlsx_path=None, mode="development"):
     """
     Load and validate all data for the multi-commodity MILP pipeline.
@@ -159,6 +161,7 @@ def load_data(xlsx_path=None, mode="development"):
     }
 
 
+# -- Function: Print loaded dataset summary --
 def print_data_summary(data):
     """Print a human-readable summary of the loaded data."""
     J = data["barangays"]

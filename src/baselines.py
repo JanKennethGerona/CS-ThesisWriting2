@@ -26,9 +26,9 @@ Usage:
     )
 """
 
-import math
-import numpy as np
+from typing import Any
 from collections import defaultdict
+import numpy as np
 
 
 # Districts classified as upland/remote (Davao City context)
@@ -38,6 +38,7 @@ UPLAND_DISTRICTS = {"Marilog", "Paquibato"}
 URBAN_CORE_DISTRICTS = {"Poblacion", "Agdao"}
 
 
+# -- Function: Compute stylized accessibility scores based on district and urbanization --
 def compute_accessibility_scores(barangays, district_map, urban_rural_map):
     """
     Assign a stylized accessibility score to each barangay.
@@ -74,6 +75,7 @@ def compute_accessibility_scores(barangays, district_map, urban_rural_map):
     return scores
 
 
+# -- Function: Compute accessibility-driven allocation baseline --
 def compute_baseline_accessibility(barangays, resources, D, S, hubs, params,
                                    district_map, urban_rural_map):
     """
@@ -161,6 +163,7 @@ def compute_baseline_accessibility(barangays, resources, D, S, hubs, params,
     }
 
 
+# -- Function: Compute decentralized Monte Carlo allocation baseline with demand inflation --
 def compute_baseline_decentralized(barangays, resources, D, S, hubs, params,
                                    district_map, urban_rural_map,
                                    n_runs=30, seed=42):
@@ -303,6 +306,7 @@ def compute_baseline_decentralized(barangays, resources, D, S, hubs, params,
 # District-level analysis helpers
 # ======================================================================
 
+# -- Function: Compute mean fulfillment grouped by administrative district --
 def compute_district_fulfillment(barangays, phi_j, district_map):
     """
     Compute mean fulfillment per district.
@@ -318,6 +322,7 @@ def compute_district_fulfillment(barangays, phi_j, district_map):
     return {d: sum(vs) / len(vs) for d, vs in district_phis.items()}
 
 
+# -- Function: Compare urban-core vs upland district fulfillment equity --
 def compare_urban_vs_upland(barangays, phi_j, district_map):
     """
     Compare mean fulfillment of urban-core districts (Poblacion, Agdao)
@@ -352,6 +357,7 @@ def compare_urban_vs_upland(barangays, phi_j, district_map):
 # Internal helpers
 # ======================================================================
 
+# -- Function: Calculate baseline statistical and equity summary metrics --
 def _compute_baseline_metrics(barangays, resources, phi_jr, phi_j,
                               acc_scores, district_map):
     """Compute summary metrics for a baseline result."""
@@ -381,6 +387,7 @@ def _compute_baseline_metrics(barangays, resources, phi_jr, phi_j,
     }
 
 
+# -- Function: Calculate statistical Gini inequality coefficient --
 def _gini_coefficient(values):
     """Compute the Gini coefficient of a list of values."""
     if not values or all(v == 0 for v in values):
@@ -394,6 +401,7 @@ def _gini_coefficient(values):
     return (2 * cumsum) / (n * total) - (n + 1) / n
 
 
+# -- Function: Compute hazard-weighted proportional allocation baseline --
 def compute_baseline_weighted_proportional(barangays, resources, D, S, P, hubs, params, H=None):
     r"""
     Hazard-Weighted Proportional Baseline (Chapter 3, Eq 3.28 revised):

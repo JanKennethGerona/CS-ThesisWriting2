@@ -24,6 +24,7 @@ from davao_rap_milp import (
 import pyomo.environ as pyo
 
 
+# -- Function: Run fairness and alternate-objective comparison suite --
 def run_fairness_comparison(hubs, barangays, resources, D, S, P, params,
                             segments, primary_phi_j, is_provisional=False):
     """
@@ -109,6 +110,7 @@ def run_fairness_comparison(hubs, barangays, resources, D, S, P, params,
     return results
 
 
+# -- Function: Pretty-print fairness comparison results --
 def print_fairness_results(results):
     """Pretty-print the fairness comparison."""
     if results.get("is_provisional"):

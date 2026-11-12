@@ -22,6 +22,7 @@ from validation import (
 import pyomo.environ as pyo
 
 
+# -- Function: Verify solution and report validation results --
 def verify_and_report(model, lambda_dict, resources, tol=1e-6):
     """
     Full post-solve verification: compute φ_j, validate, print results.

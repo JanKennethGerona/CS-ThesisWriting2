@@ -60,6 +60,7 @@ PLACEHOLDER_SUPPLY_COVERAGE_RATIO = 0.5  # PLACEHOLDER: hubs cover 50% of city d
 RESOURCES = ["water", "food"]
 
 
+# -- Function: Load barangay dataset from Excel spreadsheet --
 def load_barangay_data(path=None):
     """
     Read barangay data from the xlsx using pandas named-column access.
@@ -89,6 +90,7 @@ def load_barangay_data(path=None):
     return df
 
 
+# -- Function: Detect if vulnerability dataset uses placeholder/synthetic data --
 def detect_provisional_status(df):
     """
     Check the Vulnerability Data Source column for the substring "PLACEHOLDER".
@@ -99,6 +101,7 @@ def detect_provisional_status(df):
     ).any()
 
 
+# -- Function: Build multi-commodity MILP optimization parameter dataset --
 def build_dataset(df, hub_count=None, hmax=None, supply_coverage=None):
     """
     Produces the full multi-commodity parameter set the MILP needs:

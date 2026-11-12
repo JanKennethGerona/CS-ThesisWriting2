@@ -26,6 +26,7 @@ Requires: pyomo, and a MILP solver (appsi_highs / highs / cbc / glpk /
 """
 
 import math
+from typing import Any
 import pyomo.environ as pyo
 
 
@@ -33,6 +34,7 @@ import pyomo.environ as pyo
 # STEP 1 — SAMPLE DATA (for regression testing)
 # ======================================================================
 
+# -- Function: Build single-commodity toy instance for regression testing --
 def build_sample_data():
     """
     Single-commodity toy instance — preserved for backward compatibility
@@ -61,6 +63,7 @@ def build_sample_data():
     return hubs, barangays, resources, D, S, P, params
 
 
+# -- Function: Build multi-commodity toy instance for regression testing --
 def build_sample_data_multi():
     """
     Multi-commodity toy instance (water + food) for testing the
@@ -103,6 +106,7 @@ def build_sample_data_multi():
 # STEP 2 — DEPRIVATION COST CALIBRATION
 # ======================================================================
 
+# -- Function: Build piecewise-linear tangent segments for deprivation curves --
 def build_tangent_segments(lambda_dict,
                            breakpoints=None,
                            num_breakpoints=21):
@@ -142,6 +146,7 @@ def build_tangent_segments(lambda_dict,
 # STEP 3 — BUILD THE MULTI-COMMODITY TWO-STAGE MILP
 # ======================================================================
 
+# -- Function: Build Pyomo multi-commodity two-stage MILP optimization model --
 def build_model(hubs, barangays, resources, D, S, P, params, segments):
     """
     Build the multi-commodity two-stage MILP.
@@ -163,7 +168,7 @@ def build_model(hubs, barangays, resources, D, S, P, params, segments):
     Returns:
         Pyomo ConcreteModel
     """
-    m = pyo.ConcreteModel(name="Davao_MultiCommodity_RAP")
+    m: Any = pyo.ConcreteModel(name="Davao_MultiCommodity_RAP")
 
     # --- Sets ---
     m.I = pyo.Set(initialize=hubs)
@@ -250,7 +255,8 @@ _SOLVER_CHAIN = [
 ]
 
 
-def solve_model(m, solver_name=None, tee=False):
+# -- Function: Solve Pyomo MILP model with automated solver fallback chain --
+def solve_model(m: Any, solver_name=None, tee=False):
     """
     Solve the model, with automatic solver detection if no solver specified.
 
@@ -287,7 +293,8 @@ def solve_model(m, solver_name=None, tee=False):
 # STEP 5 — POST-SOLVE COMPUTATION
 # ======================================================================
 
-def compute_overall_fulfillment(m, resources=None):
+# -- Function: Compute post-solve overall fulfillment (Leontief minimum across commodities) --
+def compute_overall_fulfillment(m: Any, resources=None):
     """
     Compute overall fulfillment φ_j = min_r(φ_{jr}) from the solved model.
     This is NOT an in-model variable — it is computed here in Python.
@@ -314,6 +321,7 @@ def compute_overall_fulfillment(m, resources=None):
 # STEP 6 — POST-HOC FAIRNESS EVALUATION
 # ======================================================================
 
+# -- Function: Evaluate post-hoc distributive fairness metrics on fulfillment ratios --
 def evaluate_fairness(phi_j, params):
     """
     Compute fairness metrics from the post-processed φ_j vector.
@@ -364,6 +372,7 @@ def evaluate_fairness(phi_j, params):
     return report
 
 
+# -- Function: Re-solve model under alternate welfare objectives (Utilitarian, Egalitarian, Max-Min) --
 def solve_alternate_objective(hubs, barangays, resources, D, S, P, params,
                               segments, mode):
     """
@@ -378,7 +387,7 @@ def solve_alternate_objective(hubs, barangays, resources, D, S, P, params,
     Returns:
         dict: {j: overall_phi_j} (post-processed)
     """
-    m = pyo.ConcreteModel()
+    m: Any = pyo.ConcreteModel()
 
     m.I = pyo.Set(initialize=hubs)
     m.J = pyo.Set(initialize=barangays)
@@ -460,6 +469,7 @@ def solve_alternate_objective(hubs, barangays, resources, D, S, P, params,
     return phi_j
 
 
+# -- Function: Compute standard proportional allocation baseline --
 def compute_baseline_proportional(barangays, resources, D, S, hubs, params):
     """
     Compute a proportional allocation baseline for comparison.
@@ -497,6 +507,7 @@ def compute_baseline_proportional(barangays, resources, D, S, hubs, params):
 # STEP 7 — SENSITIVITY SWEEP
 # ======================================================================
 
+# -- Function: Execute parametric supply sensitivity sweep to evaluate insolvency threshold --
 def sensitivity_sweep(hubs, barangays, resources, D, S, P, params,
                       segments,
                       shrink_factors=(1.0, 0.8, 0.6, 0.4, 0.2, 0.1)):
