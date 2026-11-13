@@ -1,0 +1,93 @@
+\chapter{Review of the Related Literature}
+
+\section{The Resource Allocation Problem in Humanitarian Logistics}
+The core logistical challenge during a crisis is defined as the Resource Allocation Problem (RAP) \cite{holguin2012unique}. The primary objective of the RAP is the distribution of scarce, life-sustaining resources—such as food, water, and medical supplies—under intense time pressure and environmental uncertainty \cite{kovacs2007humanitarian}. The fundamental distinction between commercial and humanitarian supply chains is their driving imperative; while commercial logistics are optimized for profit maximization and cost reduction, humanitarian operations are strictly driven by the need to minimize human suffering and maximize survival rates \cite{starr2014, van2010using}. This theoretical boundary dictates that systems designed for disaster relief must prioritize equity and impact over sheer efficiency or financial profit \cite{gutjahr2018}.
+
+For the purposes of this study, the RAP establishes the fundamental variables for the proposed computational system: demand points located in calamity areas, supply points acting as centralized hubs, and stock availability that set the limits of intervention \cite{cui2010}.
+
+\subsection{Themes and Categories: Factors in Distribution}
+Efficient crisis response often hinges on the underlying decision-making architecture. Existing literature heavily analyzes the trade-offs between centralized and decentralized coordination, often favoring "Hub-and-Spoke" models where a central authority dictates the flow of goods to various relief points \cite{balcik2010}. Centralization is particularly effective at mitigating the "Bullwhip Effect," a phenomenon in which a lack of communication leads to the overestimation or underestimation of needs, resulting in either wasted resources or critical shortages \cite{lee1997information}. By utilizing modern information visibility tools, a centralized system can maintain a real-time "single source of truth," ensuring that distribution is organized based on actual aggregated data rather than panic-driven requests \cite{balcik2010}.
+
+A critical component of humanitarian logistics is determining the ethical framework for distribution, distinguishing between strict equality and contextual equity \cite{huang2012}. To translate these ethical concepts into a measurable computational model, researchers utilize mathematical metrics, which are broadly classified into ordinal and cardinal criteria:
+
+\subsubsection{Ordinal Criteria}
+Ordinal criteria evaluate allocations based on relative preferences and rankings rather than absolute numerical values. These metrics assess fairness by comparing the proportional satisfaction of different demand nodes \cite{gutjahr2018, huang2012}.
+
+\begin{itemize}
+    \item \textbf{Pareto-Efficiency:} An allocation is considered Pareto-efficient if it is impossible to reallocate resources to make one demand node (or region) better off without making at least one other demand node worse off. It establishes the baseline for non-wasteful distribution \cite{gutjahr2018}.
+    \item \textbf{Envy-Freeness:} This criterion ensures subjective fairness. An allocation is envy-free if no single demand node prefers the bundle of resources allocated to another demand node over its own. In disaster relief, this prevents perceived biases in distribution among equally affected regions \cite{gutjahr2018}.
+    \item \textbf{Max-Min Fair Share:} This principle dictates that no region should receive less than their proportional share of the total available resources, assuming those resources were divided equally among all entities. It sets a relative safety net for distribution \cite{huang2012}.
+\end{itemize}
+
+\subsubsection{Cardinal Criteria}
+Cardinal criteria rely on quantifiable, absolute utility values to evaluate the fairness of a distribution. These approaches formulate specific mathematical objective functions to balance efficiency and human suffering \cite{vitoriano2011}.
+
+\begin{itemize}
+    \item \textbf{Max Utilitarian:} This approach seeks to maximize the sum of all utilities (or total benefit) across the entire network. While highly efficient, it often favors easily accessible areas over remote ones, potentially neglecting severe but hard-to-reach populations \cite{vitoriano2011}.
+    \item \textbf{Pure Egalitarian:} In direct contrast to the utilitarian approach, this metric seeks to strictly equalize the utility or relief level across all demand nodes. It ensures everyone receives the exact same standard of care, regardless of the logistical cost or transportation difficulties required to achieve that balance \cite{vitoriano2011}.
+    \item \textbf{Max Leximin:} As a hierarchical extension of Max-Min fairness, the lexicographic-min (leximin) approach first maximizes the utility of the worst-off node. If there is a tie between multiple worst-off nodes, it then maximizes the utility of the second worst-off node, and so forth. It heavily prioritizes the most vulnerable populations in sequence \cite{vitoriano2011}.
+    \item \textbf{Max Nash:} This approach maximizes the mathematical product (rather than the sum) of utilities across all nodes. By doing so, it serves as a highly effective middle ground between utilitarianism (efficiency) and egalitarianism (equity). Because multiplying by zero collapses the entire product, the Max Nash criterion heavily penalizes any allocation strategy that leaves a demand node completely unserved \cite{vitoriano2011}.
+\end{itemize}
+
+Within these broader theoretical frameworks, specific mechanisms are frequently utilized to drive exact optimization models:
+
+\begin{itemize}
+    \item \textbf{The Deprivation Cost Function:} Acting as a primary cardinal measure, this function mathematically models the non-linear escalation of human suffering over time and serves as a foundational proxy for evaluating equity outcomes in penalty-based models \cite{gutjahr2018, li2021pre}.
+    \item \textbf{Max-Min Fairness Implementation:} Frequently employed as an overarching guiding principle, this approach specifically seeks to maximize the resources provided to the most disadvantaged or worst-off area first, ensuring that the baseline level of survival and relief is elevated across the entire network before surplus is distributed \cite{vitoriano2011, lin2011}.
+\end{itemize}
+
+\section{Computational Paradigms in the RAP}
+The RAP is computationally complex, prompting researchers to develop diverse approaches that balance mathematical rigor with operational speed. The following sections outline the four major computational paradigms and identify a specific, empirically grounded model for each to serve as analytical baselines.
+
+\subsection{Exact and Analytical Methods: Ordinary Mixed-Integer Linear Programming (MILP)}
+Exact mathematical models are established methodologies in operations research, utilized to compute optimal solutions under strictly defined constraints. Within disaster management, the deterministic Mixed-Integer Linear Program (MILP) is frequently applied to environments where parameters—such as aggregate demand volumes, central hub capacities, and localized vulnerability metrics—can be bounded within a specific planning horizon \cite{albadi2024, manggasa2020}. A primary characteristic of this model is its capacity to resolve interrelated allocation decisions simultaneously. Operating within a centralized Hub-and-Spoke framework, a two-stage exact MILP calculates the distribution of resources against a specific set of supply constraints, which computationally mitigates the Bullwhip Effect \cite{manggasa2020}.
+
+Furthermore, implementations of this formulation frequently expand the objective function to incorporate metrics of humanitarian equity alongside operational efficiency. By integrating a combination of distinct fairness criteria—such as max-min constraints that allocate to the most disadvantaged first, and deprivation cost functions that mathematically model human suffering over time—the two-stage MILP framework structures allocation decisions to meet both computational parameters and explicitly defined ethical constraints \cite{albadi2024}.
+
+Specific studies have successfully deployed deterministic MILPs to solve complex, localized disaster response problems:
+\begin{itemize}
+    \item Manggasa et al. (2020) utilized an ordinary MILP model to optimally locate temporary Emergency Operation Centers (EOCs) during flood scenarios in Manado, Indonesia. Their model successfully maximized the satisfaction of relief demands while adhering to strict budget limitations and distance constraints \cite{manggasa2020}. 
+    \item Al-Badi et al. (2024) formulated a deterministic MILP for the time-bounded relocation of critical assets prior to cyclone impacts, validating the model's ability to yield mathematically optimal, analytics-driven schedules within short warning periods using the Gurobi Optimizer \cite{albadi2024}. 
+\end{itemize}
+
+While stochastic variants are frequently praised for handling broad uncertainties, literature acknowledges that ordinary MILPs are highly preferable—and significantly more computationally tractable—when decision-makers require rapid, unambiguous optimal solutions within a geographically bounded or short-term scope \cite{albadi2024, manggasa2020}.
+
+\subsection{Heuristic and Metaheuristic Approaches: Hybrid Genetic Algorithm (GA)}
+In disaster scenarios where the scale of parameters renders exact mathematical optimization computationally demanding, metaheuristic search methods are utilized to generate approximate solutions within abbreviated timeframes. A prevalent methodology within this category is the Hybrid Genetic Algorithm (GA), which is frequently adapted to integrate facility location and resource allocation under defined fairness constraints \cite{moreno2018effective, changshi2019location}.
+
+In this model, the chromosome representation simultaneously encodes facility-opening decisions and sequences of demand nodes for relief routing \cite{changshi2019location}. The algorithm’s fitness function uses a weighted mathematical sum that balances overall operational costs and deprivation-based equity penalties, forcefully penalizing unmet needs in worst-off regions. Through operators like crossover, mutation, and local search subroutines, this hybrid GA efficiently iterates toward feasible allocation strategies in large-scale scenarios where strict optimality must be sacrificed for rapid operational deployment \cite{farahani2020mass, moreno2018effective}.
+
+\subsection{Approximation and Decomposition Techniques: Continuum Approximation (CA)}
+When networks encompass massive geographies, discrete variables become unmanageable. The Continuum Approximation (CA) framework resolves this by modeling discrete demand and supply as continuous density distributions over a geometric plane \cite{jiang2019emergency}.
+
+The CA model operates in two phases. Pre-disaster, it optimizes location density and stock levels continuously to minimize expected deprivation costs \cite{fazli2021location}. Post-disaster, a decomposition step corrects and maps the continuous policy back onto discrete facilities and routing plans. This framework provides tractable, closed-form policy insights that serve as highly scalable baselines for national or regional responses, though it naturally loses granular, node-specific precision \cite{fazli2021location, jiang2019emergency}.
+
+\subsection{Learning-Based and Hybrid Approaches: Predictive Demand Modeling with Optimization}
+Recent advancements advocate for a Hybrid Machine Learning (ML) and Optimization Model to handle data-rich but highly dynamic environments. This framework utilizes ML for predictive demand forecasting and spatial clustering (e.g., k-means clustering of demand points), which aggressively reduces the dimensionality of the operational theater \cite{fazli2021location, jiang2019emergency}.
+
+Once grouped into clusters with similar priority characteristics, a streamlined optimization component (a smaller-scale MILP) assigns prepositioned stock and routes deliveries to these distinct clusters rather than individual nodes. This ensures equitable allocation while adapting proactively to predicted crisis trajectories rather than purely reacting to them \cite{jiang2019emergency}.
+
+\section{Theoretical Framework}
+The theoretical foundation of this study is anchored at the multidisciplinary intersection of Operations Research (OR) Optimization Theory, Welfare Economics, and Network Design Theory. Together, these established paradigms provide the foundational blueprint for addressing the Resource Allocation Problem (RAP) within a localized, city-wide humanitarian context.
+
+\subsection{Operations Research and Optimization Theory}
+The fundamental mathematical mechanism driving this study is rooted in Operations Research, specifically through the lens of Exact Deterministic Optimization Theory. According to established OR principles applied to disaster relief, when a logistical problem is geographically bounded and its parameters—such as localized demand volumes, central hub capacities, and population vulnerability metric—are measurable within a specific planning horizon, exact mathematical programming should be employed to guarantee absolute optimality rather than mere approximations \cite{van2010using}. This theory provides the mathematical justification for the study’s utilization of an Ordinary Mixed-Integer Linear Program (MILP). Drawing from the optimization methodologies of Malmir and Zobel (2021) and Tavana et al. (2018) \cite{malmir2021, tavana2018}, this exact framework acts as the analytical engine of the system, computing the precise resource allocations necessary to minimize total logistical and penalty costs within a municipal jurisdiction.
+
+\subsection{Welfare Economics and Equity Theory}
+While commercial supply chains are governed by theories of profit maximization, humanitarian logistics are strictly governed by theories of human welfare and equity \cite{holguin2012unique}. To operationalize these ethical mandates, this study utilizes Equity Theory, specifically translating human suffering into computable mathematics via the Deprivation Cost Function. Formally established by \cite{gutjahr2018} and implemented in exact models by \cite{li2021pre}, this concept posits that human suffering escalates non-linearly over time when life-sustaining resources are withheld. By utilizing a population-weighted Deprivation Cost Function as the single objective function alongside anti-starvation floor constraints, the proposed MILP mathematically penalizes severe under-fulfillment. The resulting allocation is subsequently benchmarked against multiple fairness criteria to verify its distributive equity. This integration validates the ethical mandate of disaster relief by forcing the system to penalize delayed distribution, thereby placing the mitigation of human suffering above pure logistical cost-reduction.
+
+\subsection{Network Design and Coordination Theory}
+The structural architecture of the proposed distribution system is grounded in Centralized Network Design Theory, specifically utilizing the Hub-and-Spoke coordination model. Centralized coordination theory fundamentally addresses the behavioral and informational distortions known as the "Bullwhip Effect" \cite{lee1997information}, a phenomenon that frequently causes critical shortages, local hoarding, and wasted resources during crisis events. By structuring the proposed computational model in two distinct logistical phases—Phase 1 governing hub activation at central municipal hubs, and Phase 2 governing post-disaster allocation to affected barangays—the framework establishes a single source of truth for decision-makers \cite{balcik2010}. This theoretical structure dictates that all resource and inventory allocation in the MILP must flow outward from centralized municipal hubs, effectively neutralizing disjointed, panic-driven distribution efforts.
+
+\subsection{Synthesis}
+Conclusively, this theoretical framework dictates that a localized Resource Allocation Problem cannot be solved efficiently by heuristic approximations, nor equitably by standard commercial routing models. By synthesizing Exact MILP Optimization, the Deprivation Cost Function, and Hub-and-Spoke Network Theory, the study establishes a rigorous, mathematically sound blueprint. This synthesis guarantees that the resulting computational system provides a disaster response protocol that is optimally efficient in its resource allocation while remaining strictly equitable in its mitigation of human suffering.
+
+% ---------------------------------------------------------
+% THEORETICAL FRAMEWORK DIAGRAM
+% ---------------------------------------------------------
+\begin{figure}[htbp]
+    \centering
+    \includegraphics[width=1.0\textwidth]{CS_Undergraduate_Thesis_Template/figs/theoframework.png} 
+    \caption{Diagram of the Theoretical Framework integrating Exact MILP, Deprivation Cost Functions, and Hub-and-Spoke Network Theory.}
+    \label{fig:theoretical_framework}
+\end{figure}

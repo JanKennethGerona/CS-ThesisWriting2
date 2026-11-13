@@ -1,0 +1,651 @@
+\chapter{Methodology}
+
+This chapter details the research methods, mathematical modeling, and computational procedures utilized to address the Resource Allocation Problem (RAP). It outlines the research design, the explicit formulation of the Mixed-Integer Linear Program (MILP), the data collection procedures, and the computational environment used to validate the proposed equitable distribution system.
+
+\section{Research Design}
+This study employs a quantitative, computationally driven research design rooted in Operations Research (OR) and mathematical optimization theory. Because the research context involves a geographically bounded humanitarian response with measurable parameters—such as resource capacities and baseline demand—an exact analytical method is utilized \cite{van2010using}. Specifically, the study formulated a deterministic Joint Facility Location and Resource Allocation Problem (FLRAP) implemented via a two-tier hierarchical Mixed-Integer Linear Programming (MILP) architecture. While classical stochastic programming reserves 'two-stage' for recourse models under uncertainty \citep{birge2011introduction}, the two-stage framing in this study denotes a deterministic, single-snapshot hierarchical structure solved simultaneously in a unified MILP. This approach guarantees mathematically provable optimal solutions for localized resource allocation, effectively balancing supply constraints with strict humanitarian equity within a defined planning horizon \cite{albadi2024, manggasa2020}.
+
+\section{Research Locale and Population}
+The study is mathematically grounded within the geographical boundaries of Davao City, Philippines. The logistical network comprises municipal districts acting as potential supply hubs and severely affected barangays acting as demand points. This locale was selected due to its vulnerability to extreme weather events (e.g., flooding and earthquakes) and the availability of granular census and municipal infrastructure data required to accurately bound the deterministic model.
+
+\section{Case Study: Davao City Post-Disaster Humanitarian Logistics}
+
+\subsection{Problem Environment}
+Davao City, located in the southern Philippines, is the largest city in the country by land area, spanning approximately 2,443.61 square kilometers. The city comprises 182 administrative barangays organized into 11 distinct administrative districts: Poblacion, Talomo, Agdao, Buhangin, Bunawan, Paquibato, Baguio, Calinan, Marilog, Toril, and Tugbok. Geographically, the city presents extreme logistical diversity, ranging from high-density, low-lying coastal urban centers (e.g., Talomo and Agdao) to expansive, topographically rugged mountainous and rural districts (e.g., Marilog and Paquibato).
+
+Due to its proximity to major river basins (notably the Davao River and Lipadas River) and active fault lines, Davao City faces recurring vulnerabilities to hydrometeorological and geological hazards, particularly severe riverine flooding, urban flash floods, and localized landslides during heavy monsoon rains and tropical depressions. In the immediate aftermath of a major disaster event, the City Disaster Risk Reduction and Management Office (CDRRMO) and the Department of Social Welfare and Development (DSWD) must orchestrate relief distribution under severe resource scarcity and compromised transportation infrastructure.
+
+\subsection{Data Sources, Parameter Calibration, and Data Cleaning}
+To ensure empirical validity, policy relevance, and academic transparency, the multi-commodity optimization environment is parameterized using official local government datasets, international humanitarian standards, and physiological deprivation theory:
+
+\begin{enumerate}
+    \item \textbf{Demographic and Administrative Dataset ($D_{jr}$):} Baseline population counts for all 182 barangays were obtained from the official 2024 Population Census (POPCEN) administered by the Philippine Statistics Authority (PSA). Each administrative barangay was cross-referenced and geocoded using its unique 10-digit Philippine Standard Geographic Code (PSGC). This step uniquely disambiguated identical barangay names located across different administrative districts (e.g., distinguishing \textit{Barangay San Antonio} in the Buhangin District from \textit{Barangay San Antonio} in the Agdao District).
+
+    \item \textbf{Humanitarian Standards and Demand Formulations:} Daily relief demand per capita is governed by the internationally recognized \citep{sphere2018handbook}:
+    \begin{itemize}
+        \item \textbf{Potable Water ($S_{\text{water}}$):} $15.0\text{ Liters/person/day}$, satisfying critical survival thresholds for hydration, food preparation, and emergency hygiene.
+        \item \textbf{Emergency Nutrition ($S_{\text{food}}$):} $2{,}100.0\text{ kcal/person/day}$, aligned with emergency nutritional baselines (equivalent to standard Department of Social Welfare and Development [DSWD] Family Food Pack daily rations).
+    \end{itemize}
+
+    For each barangay $j \in J$ and commodity $r \in \{\text{water},\text{food}\}$, baseline daily demand $D_{jr}$ is computed deterministically as:
+    \begin{equation}
+        D_{j,\text{water}} = \text{Population}_j \times 15.0,
+        \qquad
+        D_{j,\text{food}} = \text{Population}_j \times 2{,}100.0.
+    \end{equation}
+
+    Across all 182 barangays, total city-wide daily baseline demand amounts to $27{,}734{,}205$ L/day of potable water and $3{,}882{,}788{,}700$ kcal/day of nutritional subsistence.
+
+    \item \textbf{Empirical Flood Hazard Calibration ($P_j$):} Vulnerability priority weights ($P_j$) reflect spatial flood inundation exposure obtained from the official Davao City Disaster Risk Reduction and Management Office (CDRRMO) and \citep{projectnoah2024davao} flood susceptibility assessments. Barangays are stratified into four empirical inundation tiers:
+    \begin{itemize}
+        \item \textit{Minimal / Upland} ($n = 83$): Inundation depth $< 0.1\text{ m}$ (Raw Rating = $0$).
+        \item \textit{Low Hazard} ($n = 52$): Inundation depth $0.1\text{ m} - 0.5\text{ m}$ (Raw Rating = $1$).
+        \item \textit{Medium Hazard} ($n = 35$): Inundation depth $0.5\text{ m} - 1.5\text{ m}$ (Raw Rating = $2$).
+        \item \textit{High Hazard} ($n = 12$): Inundation depth $> 1.5\text{ m}$ along major river corridors such as the Davao, Matina, and Lipadas River basins (Raw Rating = $3$; e.g., \textit{Barangay 5-A Bankerohan}, \textit{Ma-a}, \textit{Matina Aplaya}, \textit{Matina Crossing}, \textit{Matina Pangi}, and \textit{Waan}).
+    \end{itemize}
+
+    To ensure that relief allocation is scaled both by the number of individuals affected and by the physical severity of hazard exposure, the vulnerability priority weight $P_j$ is formulated as a composite population-hazard weight:
+\begin{equation}
+    P_j = \frac{\text{Population}_j \times \text{Indicator}_j}{\sum_{k \in J} (\text{Population}_k \times \text{Indicator}_k)}, \quad \forall j \in J,
+\end{equation}
+where $\text{Indicator}_j = \text{Rating}_j + 1 \in \{1, 2, 3, 4\}$ maps the four empirical CDRRMO flood inundation tiers (Minimal/Upland = 1, Low = 2, Medium = 3, High = 4) to strictly positive values. This guarantees that $\sum_{j \in J} P_j = 1.0$ and $P_j > 0$ for all barangays. 
+
+Under this composite weighting, a 10\% relief deficit in a densely populated, high-hazard barangay (e.g., \textit{Talomo} or \textit{Buhangin}) correctly incurs a much higher deprivation penalty than an identical percentage shortfall in a sparsely populated upland settlement, while simultaneously ensuring that high-hazard communities receive a fourfold priority multiplier over baseline upland areas of equivalent population.
+
+
+    \item \textbf{Theoretical Basis of Deprivation Escalation Parameters ($\lambda_r$):} In contrast to static census and topographical hazard maps, dynamic post-disaster human suffering cannot be observed directly through spatial overlays. For academic transparency, the deprivation escalation parameters ($\lambda_{\text{water}} = 2.0$, $\lambda_{\text{food}} = 0.5$) are not asserted as field-fitted econometric estimates from retrospective rescue logs. Rather, they are \textbf{theoretically grounded sensitivity parameters} derived from disaster medicine physiology (the emergency ``Rule of Threes'') and post-disaster deprivation theory (Holgu\'{i}n-Veras et al., 2013). Acute dehydration produces debilitating morbidity and mortality within 48--72 hours, whereas caloric deprivation progresses over several weeks; hence, $\lambda_{\text{water}} > \lambda_{\text{food}}$ captures the physiological time-to-criticality hierarchy. The structural stability and behavioral sensitivity of the model with respect to $\lambda_r$ are systematically validated across a wide parametric sweep ($\lambda \in [0.1, 5.0]$) in Section 4.4.
+\end{enumerate}
+
+\textbf{Data Cleaning Pipeline and Software Safeguards:} Prior to model ingestion, the raw datasets underwent systematic algorithmic verification:
+\begin{itemize}
+    \item \textbf{Demographic and Geographic Integrity:} Verified 100\% completeness across all 182 barangays, confirming zero null population counts and complete coverage of all 11 administrative districts.
+    \item \textbf{Demand Conservation Checks:} Verified that both water and food baseline demands match the product of official census populations and Sphere standard multipliers ($\Delta < 10^{-4}$).
+    \item \textbf{Automated Readiness Gating:} The software pipeline implements an automated data validation gate (\texttt{detect\_provisional\_status}). During initial development, provisional data automatically trip an execution safeguard, stamping outputs with demonstration warnings. Following full empirical calibration with the CDRRMO flood hazard dataset, the pipeline transitions to validated research mode (\texttt{is\_provisional = False}, \texttt{data\_status = "VALIDATED RESEARCH RUN"}), ensuring complete congruence between manuscript assertions and software engine metadata.
+\end{itemize}
+
+\subsubsection{Candidate Supply Hub Network and Inventory Parameterization}
+The candidate distribution network is structured around six regional Disaster Risk Reduction and Management Operations Center (DRRMOC) logistics staging areas positioned in major administrative and population centers across Davao City. Under the baseline planning scenario, total municipal prepositioned inventory is calibrated to cover $50\%$ of aggregate daily demand ($13{,}867{,}102\text{ L/day}$ of potable water and $1{,}941{,}394{,}350\text{ kcal/day}$ of nutritional subsistence), distributed uniformly across candidate hubs as detailed in Table~\ref{tab:hub_specifications}.
+
+\begin{table}[H]
+\centering
+\caption{Candidate DRRMOC Distribution Hub Specifications and Available Stock}
+\label{tab:hub_specifications}
+\small
+\resizebox{\textwidth}{!}{%
+\begin{tabular}{lllrr}
+\hline
+\textbf{Hub Identifier} & \textbf{Host Barangay} & \textbf{District} & \textbf{Water Stock ($S_{i,\text{water}}$, L)} & \textbf{Food Stock ($S_{i,\text{food}}$, kcal)} \\ \hline
+\texttt{HUB\_Buhangin} & Buhangin & Buhangin & $2{,}311{,}184$ & $323{,}565{,}725$ \\
+\texttt{HUB\_Talomo} & Talomo Proper & Talomo & $2{,}311{,}184$ & $323{,}565{,}725$ \\
+\texttt{HUB\_Ma-a} & Ma-a & Talomo & $2{,}311{,}184$ & $323{,}565{,}725$ \\
+\texttt{HUB\_Tibungco} & Tibungco & Bunawan & $2{,}311{,}184$ & $323{,}565{,}725$ \\
+\texttt{HUB\_Matina} & Matina Crossing & Talomo & $2{,}311{,}184$ & $323{,}565{,}725$ \\
+\texttt{HUB\_Toril} & Toril Proper & Toril & $2{,}311{,}184$ & $323{,}565{,}725$ \\ \hline
+\textbf{City Total (50\%)\textsuperscript{\textdagger}} & \textit{6 Hub Locations} & \textit{City-Wide Staging} & $\mathbf{13{,}867{,}102}$ & $\mathbf{1{,}941{,}394{,}350}$ \\ \hline
+\end{tabular}%
+}
+\vspace{0.1cm}
+\footnotesize{\newline \textsuperscript{\textdagger}City Total reflects exact $50\%$ city-wide baseline demand ($27{,}734{,}205 / 2 = 13{,}867{,}102.5$ L); per-hub quantities are rounded to the nearest integer, resulting in a minor $2$-liter arithmetic artifact across the six depots.}
+\end{table}
+
+\noindent \textit{Operational Justification for $H_{\max} = 4$:} Municipal emergency response protocol bounds the maximum number of simultaneously operational distribution staging hubs at $H_{\max} = 4$. This cap reflects realistic field operational constraints during acute crisis conditions, including available CDRRMO logistics personnel, armed security escort teams (PNP/AFP) required for relief convoys, and heavy-vehicle fleet dispatch limits. Because four active hubs hold a combined capacity of $\frac{4}{6} \times 50\% \approx 33.33\%$ of aggregate daily city demand, the constraint forces the solver to make strategic, equity-driven location decisions, ensuring active hubs can collectively satisfy the universal anti-starvation floor ($\varepsilon_{\min} = 0.10$) across all 182 barangays.
+
+\noindent \textit{Structural Note on Hub Activation Symmetry:} In this baseline benchmark instance, candidate DRRMOC depots are assigned uniform staging capacities ($S_{ir} = \text{Total Stock} / 6$), and arc routing costs are abstracted to evaluate pure allocation equity. Under these baseline conditions, the $\sum_{i \in I} y_i \le H_{\max}$ constraint acts as a strict macro-level capacity ceiling, capping active municipal throughput to $\frac{H_{\max}}{|I|} = \frac{4}{6}$ ($66.7\%$) of available warehouse inventory across $\binom{6}{4} = 15$ symmetric activation combinations. In localized field deployments where candidate DRRMOC depots possess asymmetric warehouse footprints proportional to host-district catchment populations, Stage 1 actively resolves a non-trivial combinatorial knapsack selection to maximize accessible inventory.
+
+
+\subsection{Scope: What the Case Study Covers and Leaves Out}
+To maintain mathematical tractability while addressing key policy decisions, the scope of this case study is formally bounded as follows.
+
+\paragraph{Covered in the Study:}
+\begin{itemize}
+    \item Complete coverage of all 182 registered barangays of Davao City across both urban and rural districts.
+    \item Simultaneous multi-commodity allocation of two life-critical resources: potable water ($r=\text{water}$) and food calories ($r=\text{food}$).
+    \item Two-stage decision-making: Stage 1 tactical activation of up to $H_{\max}=4$ Disaster Risk Reduction and Management Operation Center (DRRMOC) hubs from candidate regional facilities, and Stage 2 operational commodity allocation from active hubs to demand nodes.
+    \item Non-linear, convex deprivation cost functions capturing the exponential escalation of human suffering as fulfillment falls.
+    \item Comparative post-hoc fairness evaluations against Utilitarian, Egalitarian, and proportional baseline allocation models.
+\end{itemize}
+
+\paragraph{Excluded from the Study (Out of Scope):}
+\begin{itemize}
+    \item \textbf{Intra-Barangay Distribution:} The model allocates relief commodities to the designated barangay evacuation center or logistics drop-point. Intra-barangay distribution to individual households is left to local Barangay Disaster Risk Reduction and Management Committees (BDRRMC).
+    \item \textbf{Dynamic Fleet Vehicle Routing:} Real-time vehicle route optimization (e.g., turn-by-turn road traffic, bridge collapse rerouting, and vehicle payload packing) is abstracted into aggregate flow capacities; detailed microscopic routing is deferred to operational dispatch tools.
+    \item \textbf{Multi-Period Inventory Dynamics:} The case study evaluates a single critical operational relief cycle (the initial 24-to-72-hour acute response window) and does not model multi-day inventory re-supply or warehouse restock arrivals.
+    \item \textbf{Non-Commodity Relief Assets:} Medical personnel dispatch, specialized search-and-rescue equipment, and temporary shelter kits are excluded to focus specifically on life-sustaining nutritional and hydration survival supplies.
+\end{itemize}
+
+% ==============================================================================
+\section{Mathematical Assumptions and Bias Control Mechanisms}
+\label{sec:assumptions}
+
+Prior to the formal specification of the problem and mathematical formulation, the core theoretical assumptions and bias control mechanisms underlying the optimization model are outlined.
+
+\subsection{Mathematical and System Assumptions}
+\begin{enumerate}
+    \item \textbf{Two-Stage Deterministic Structure:} The problem is formulated as a two-stage deterministic mixed-integer linear program (MILP). Stage 1 determines binary hub facility activation ($y_i \in \{0,1\}$), and Stage 2 determines continuous resource allocation flows ($x_{ijr} \ge 0$). Although relief demand and capacities may be parameterized for different disaster scenarios, the formulation within a given scenario cycle is deterministic and solved as one planning-horizon snapshot.
+
+    \item \textbf{Complete Hub-to-Barangay Connectivity:} Any activated hub $i$ may allocate resources to any barangay $j$ within the modeled service area. Arc-level road constraints, travel time, and vehicle routing are abstracted into aggregate flow and hub-capacity constraints. This assumption is consistent with the study's focus on allocation rather than microscopic physical routing.
+
+    \item \textbf{Commodity Demand Independence:} Water and food demands are physiologically distinct and are computed independently from baseline population and their respective humanitarian standards. Inventory and allocation for each commodity are modeled separately, with no cross-commodity substitution; excess food cannot compensate for a water deficit, and excess water cannot compensate for a food deficit.
+
+    \item \textbf{Divisible, Homogeneous Resources:} For mathematical tractability, each commodity is represented as a continuously divisible quantity ($x_{ijr} \in \mathbb{R}_{\ge 0}$). The model does not impose minimum shipment sizes, package-level indivisibilities, spoilage, or household-level consumption constraints.
+
+    \item \textbf{Convexity and Inner Tangent Linearization:} To ensure that complete demand satisfaction ($\phi_{jr} = 1.0$) yields zero penalty cost, the exponential deprivation cost function is formulated with a zero-baseline shift:
+\begin{equation}
+    g_r(\phi_{jr}) = e^{\lambda_r(1-\phi_{jr})} - 1,
+\end{equation}
+where $\phi_{jr} \in [\varepsilon_{\min}, 1.0]$ is the fulfillment ratio and $\lambda_r > 0$ is the commodity-specific escalation rate.
+
+In foundational humanitarian logistics literature \citep{gutjahr2018}, deprivation cost is typically parameterized by elapsed waiting time $t$ without access to a critical service: $g(t) = e^{\lambda' t} - 1$. Within this study's single-snapshot operational framework governing an acute planning horizon of duration $T$ (conventionally 24 to 72 hours post-disaster), the unmet fulfillment fraction $(1-\phi_{jr})$ represents the proportion of the operational cycle during which the population remains unserved. Under continuous linear depletion, the effective deprivation duration is given by $\tau_{jr} = (1-\phi_{jr})T$. Substituting $\tau_{jr}$ into the exponential deprivation formulation yields:
+\begin{equation}
+    g_r(\tau_{jr}) = \exp\left(\lambda'_r (1-\phi_{jr})T\right) - 1 = \exp\left(\lambda_r(1-\phi_{jr})\right) - 1, 
+\end{equation}
+where the dimensionless model parameter $\lambda_r = \lambda'_r T$ absorbs the temporal planning window. Consequently, $(1-\phi_{jr})$ operates as an exact normalized temporal proxy for deprivation duration.
+
+Because $g_r$ is strictly convex, its epigraph can be approximated using $K = 20$ linear tangent segments generated across 21 uniform breakpoint intervals ($\Delta \phi = 0.05$ over $[0.0, 1.0]$):
+\begin{equation}
+    z_{jr} \ge m_{kr}(1 - \phi_{jr}) + b_{kr}, \quad \forall j \in J, \forall r \in R, \forall k \in \{1, \dots, K\},
+\end{equation}
+bounding the piecewise linear under-approximation error strictly to $\Delta_{\text{approx}} \le 0.007194$ ($< 0.72\%$).
+
+
+    \item \textbf{Asymmetric Deprivation Dynamics ($\lambda_{\text{water}}>\lambda_{\text{food}}$):} The escalation parameter for potable water is set higher than that for food ($\lambda_{\text{water}}=2.0$ versus $\lambda_{\text{food}}=0.5$). This reflects the intended model assumption that water deprivation becomes critical more rapidly than caloric deprivation within the short acute-response window.
+
+    \item \textbf{Static Vulnerability Weighting Within a Single Solve:} Each barangay's vulnerability weight $P_j$ is treated as fixed during one optimization run. The model therefore does not re-estimate vulnerability or change weights during the same response cycle.
+
+    \item \textbf{Decoupled Multi-Commodity Objective Formulation:} The optimization objective aggregates the per-commodity deprivation costs directly:
+    \begin{equation}
+        \min \sum_{j\in J} P_j \sum_{r\in R} z_{jr}.
+    \end{equation}
+    The overall composite fulfillment ratio for each barangay is governed by Liebig's Law of the Minimum:
+    \begin{equation}
+        \phi_j = \min_{r\in R}\phi_{jr}.
+    \end{equation}
+    Rather than constraining $\phi_j$ as the primary LP objective variable, $\phi_j$ is evaluated deterministically in post-solve processing to identify the barangay's bottleneck commodity.
+\end{enumerate}
+
+\subsection{Bias Control Mechanisms}
+In post-disaster humanitarian logistics, unconstrained allocation models are susceptible to structural failure modes, including small-demand prioritization bias, resource hoarding, and commodity masking. To actively mitigate these vulnerabilities, the proposed mathematical model enforces four explicit structural bias-control mechanisms:
+
+\begin{enumerate}
+    \item \textbf{Universal Anti-Starvation Floor Constraint ($\phi_{jr} \ge \varepsilon_{\min}$):} 
+    The model enforces a non-negotiable lower bound on fulfillment for every barangay and every commodity:
+    \begin{equation}
+        \phi_{jr} \ge \varepsilon_{\min} = 0.10, \qquad \forall j \in J, \; \forall r \in R.
+    \end{equation}
+    This prevents the optimizer from reducing any barangay's fulfillment below the policy-set minimum, regardless of geography, delivery difficulty, or relative population size.
+
+    \textit{Dual Interpretation and Insolvency Diagnostic:} Under extreme crisis conditions where total available throughput across active hubs drops below the aggregate survival threshold (i.e., when total active hub stock falls below $\varepsilon_{\min} \times \sum_{j} D_{jr} \approx 10\%$ of total city demand), the solver returns an \texttt{INFEASIBLE} status. In this framework, \texttt{INFEASIBLE} is not an algorithmic defect; rather, it functions as an intentional \textbf{Policy Diagnostic Boundary}. Mathematically certifying infeasibility proves that municipal inventory is insolvent---meaning local authorities cannot guarantee even 10\% survival rations across all 182 barangays simultaneously. Operationally, this status serves as an automated trigger for Tier-3 National Escalation, signaling the immediate requirement for regional DSWD augmentation, NDRRMC prepositioning, or military airlifts.
+
+    \textit{Elastic Slack Formulation for Graceful Degradation:} To support continuous operational dispatch during extreme insolvency without triggering a total solver halt, the hard floor can be relaxed into an elastic soft constraint using non-negative penalty slack variables $\xi_{jr} \ge 0$:
+    \begin{equation}
+        \phi_{jr} + \xi_{jr} \ge \varepsilon_{\min}, \qquad \forall j \in J, \; \forall r \in R,
+    \end{equation}
+    with the modified elastic objective function:
+    \begin{equation}
+        \min Z_{\text{elastic}} = \sum_{j \in J} P_j \sum_{r \in R} z_{jr} + M \sum_{j \in J} \sum_{r \in R} \xi_{jr},
+    \end{equation}
+    where $M \gg \max(z_{jr})$ (e.g., $M = 1{,}000$) represents an exorbitant Big-$M$ penalty multiplier. When total supply satisfies minimum survival thresholds, $\xi_{jr} = 0$, yielding identical optimal allocations to the hard-constraint model. Under severe deficit scenarios where total active supply falls below the $10\%$ survival floor, the penalty forces $\xi_{jr} > 0$ strictly as a last resort, allowing the model to degrade gracefully and allocate all available stock strictly according to composite priority ($P_j$) without returning an unhandled \texttt{INFEASIBLE} state.
+
+    \item \textbf{Demand Ceiling / Anti-Hoarding Constraint ($\phi_{jr} \le 1.0$):} 
+    Fulfillment for each commodity is capped at $100\%$ of the verified humanitarian-standard demand:
+    \begin{equation}
+        \phi_{jr} \le 1.0, \qquad \forall j \in J, \; \forall r \in R.
+    \end{equation}
+    This prevents mathematical over-allocation or resource hoarding at selected nodes while other barangays remain in severe deficit.
+
+    \item \textbf{Hazard-Weighted Equity Prioritization ($P_j$):} 
+    Instead of allowing allocations to be dictated by population volume alone, each barangay's deprivation cost is scaled by a vulnerability weight $P_j$ derived from validated flood and landslide susceptibility mappings. This gives greater objective weight to communities subject to more severe physical hazard exposure and infrastructure disruption.
+
+    \item \textbf{Independent Multi-Commodity Enforcement:} 
+    Independent capacity bounds, conservation equations, and anti-starvation thresholds are enforced for water and food separately, with fulfilled quantities represented by:
+    \begin{equation}
+        w_{jr} = \phi_{jr} D_{jr}.
+    \end{equation}
+    Consequently, a barangay cannot be considered adequately served merely because it receives excess food while its water fulfillment remains deficient, actively mitigating commodity masking bias.
+\end{enumerate}
+
+\subsection{Interpretation of the Equity Safeguards}
+The equity behavior of the model is therefore a structural property of the formulation rather than a discretionary operating preference. The hazard-weighted deprivation objective determines which unmet needs carry greater priority, the convex deprivation function penalizes severe under-fulfillment more strongly than moderate shortfalls, and the anti-starvation floor prevents the optimization process from sacrificing any barangay entirely under scarcity. The anti-hoarding ceiling further prevents over-allocation beyond modeled need, while independent commodity constraints ensure that fulfillment in one resource cannot conceal a critical deficit in another.
+
+Together, these mechanisms address the primary failure modes targeted by the study: concentration of resources in accessible or populous locations, excessive allocation to selected nodes, and masking of critical deficits through aggregate delivery measures.
+
+Furthermore, the interaction between the hazard-weighted objective and the anti-starvation floor establishes a clear operational envelope. When active hub inventory meets or exceeds the aggregate survival floor ($\ge 10\%$ of total city demand), the hard constraint guarantees universal baseline survival while the convex deprivation function optimizes distributive equity. When total active capacity drops below this critical threshold ($< 10\%$), the framework provides an explicit operational dichotomy: functioning either as an uncompromised \textit{Insolvency Diagnostic} (under the hard-constraint policy mandate) or as a \textit{Graceful Degradation Dispatcher} (under the elastic Big-$M$ penalty slack formulation).
+
+
+\section{Conceptual Framework}
+The conceptual framework of this study is structured upon an Input-Process-Output (IPO) model, operating entirely within a Centralized Hub-and-Spoke Information Architecture designed to computationally neutralize the localized Bullwhip Effect among municipal Disaster Risk Reduction and Management Operations Centers (DRRMOCs). The Bullwhip Effect, originally defined by Lee, Padmanabhan, and Whang (1997) \cite{lee1997information} as the amplification of demand order variability as information moves upstream in a supply chain, manifests in decentralized disaster response as cascading over- and under-allocation of relief resources across municipal response nodes. The centralized hub-and-spoke architecture directly counters this by consolidating information and allocation authority into a single computational layer.
+
+\subsection{Inputs (System Parameters)}
+The model is initialized with deterministic, bounded data extracted during the critical planning horizon of a localized disaster. Key inputs exclude physical routing constraints and focus strictly on allocation parameters:
+\begin{itemize}
+    \item \textbf{Demand Points:} Aggregated distress signals and population-weighted vulnerability indices from severely affected zones (e.g., communities within the Davao and Talomo River Basins), consistent with established methods for quantifying differential community exposure to hazard events.
+    \item \textbf{Supply Hubs:} The real-time available stock and operational capacities of centralized DRRMOC distribution centers.
+    \item \textbf{Historical Data:} Baseline demand estimates derived from previous calamity responses to inform aggregate necessity.
+\end{itemize}
+Contextual constraints — including data reliability, inter-agency coordination capacity, and communication infrastructure — are recognized as external moderating factors that bound the operational feasibility of the model during actual disaster conditions, though they fall outside the system's computational scope.
+
+\subsection{Process (The Analytical Engine)}
+The core processing was executed via a deterministic, Two-Stage Mixed-Integer Linear Program (MILP) that strictly isolates the mathematical assignment of aid from physical transportation mechanics:
+\begin{itemize}
+    \item \textbf{Stage 1 (Tactical Hub Activation):} The model determines the optimal activation of up to $H_{\max}$ centralized DRRMOC distribution hubs from candidate municipal sites based on facility throughput and capacity limits.
+    \item \textbf{Stage 2 (Deprivation-Minimizing Allocation):} Given the active supply network, the exact MILP computes the continuous commodity dispatch $x_{ijr}$ to all 182 barangays. This allocation is governed by an objective function that minimizes total composite population- and hazard-weighted deprivation costs, constrained by universal anti-starvation survival floors ($\phi_{jr} \ge \varepsilon_{\min} = 0.10$) and demand ceilings ($\phi_{jr} \le 1.0$). Rather than enforcing rigid Max-Min equality constraints during the solve---which can severely restrict throughput efficiency---the resulting optimal allocation matrix is subsequently benchmarked against Max-Min, Nash, and Utilitarian fairness criteria post-optimization to analytically evaluate its distributive equity profile.
+\end{itemize}
+
+\subsection{Outputs (Equitable Apportionment)}
+The definitive output of the system is the mathematically optimal allocation decision matrix. This dictates the precise quantities of life-sustaining resources assigned to each demand node. Because the MILP utilizes population-weighted deprivation cost as its single objective function, the resulting hub-to-node assignment is computationally optimized to minimize population-weighted human suffering, yielding an equitable allocation matrix that is subsequently evaluated across Max-Min, Nash, and Leximin fairness criteria.
+
+The primary output of the optimization engine is the definitive, hub-to-barangay allocation matrix 
+$x_{ijr}^*$ and associated fulfillment vector $\boldsymbol{\phi}^*$. Because the MILP utilizes 
+a population- and hazard-weighted deprivation cost objective, the resulting assignment minimizes 
+aggregate human suffering across all 182 barangays while satisfying operational capacity constraints.
+
+The mathematical model is formulated as a single-period deterministic optimization that provides an 
+authoritative baseline allocation for the initial acute response cycle. In actual multi-day crisis operations, 
+field outcomes from this initial distribution (e.g., remaining inventory, secondary hazard events, and updated 
+census counts) would naturally serve as parameter inputs for successive daily dispatch cycles in a rolling-horizon 
+deployment. Within the analytical scope of this thesis, however, the formulation evaluates the deterministic 
+properties and equity profile of a single-snapshot allocation, leaving rolling-horizon multi-period inventory 
+dynamics for future operational extensions.
+
+
+\begin{figure}[H]
+    \centering
+    \includegraphics[width=0.85\textwidth]{CS_Undergraduate_Thesis_Template/figs/conceptwork.png}
+    \caption{Conceptual Framework mapping the Input-Process-Output (IPO) architecture of the 
+Two-Stage MILP RAP System. The analytical engine computes an exact single-snapshot allocation 
+for the acute response horizon, providing the decision foundation for successive operational cycles.}
+\label{fig:conceptual_framework}
+\end{figure}
+\FloatBarrier
+
+\section{Mathematical Formulation (The Allocation Model)}
+To operationalize the theoretical framework, the allocation problem is formulated as an exact Two-Stage Mixed-Integer Linear Programming (MILP) model. Stage 1 determines the binary activation of supply hubs based on manpower limits, and Stage 2 computes the optimal, continuous allocation of finite resources subject to strict humanitarian constraints.
+
+\noindent \textit{Taxonomy \& Structural Note:} From an Operations Research perspective, this formulation represents a single-period deterministic Joint Facility Location and Multi-Commodity Resource Allocation Problem (FLRAP). The designation ``Two-Stage'' explicitly reflects the two-tier decision variable hierarchy (binary facility activation decisions in Tier 1 and continuous commodity dispatch decisions in Tier 2) solved simultaneously in a unified deterministic MILP.
+
+\subsection{Sets and Indices}
+\begin{itemize}
+    \item $I$: Set of supply sources or consolidated inventory pools, indexed by $i \in I$.
+    \item $J$: Set of demand points (barangays), indexed by $j \in J$.
+    \item $R$: Set of relief commodities, indexed by $r \in R = \{\text{water}, \text{food}\}$.
+\end{itemize}
+
+\subsection{Parameters}
+\begin{itemize}
+    \item $D_{jr}$: Baseline demand for commodity $r$ at demand point $j$.
+    \item $S_{ir}$: Maximum available inventory of commodity $r$ at supply hub $i$.
+    \item $P_j$: The composite population-hazard priority weight of barangay $j$, satisfying $\sum_{j \in J} P_j = 1.0$.
+    \item $\lambda_r$: A scaling constant governing the exponential rate of deprivation escalation for commodity $r$.
+    \item $H_{\max}$: The maximum number of supply hubs that can be activated simultaneously due to DRRMOC personnel constraints.
+    \item $\varepsilon_{\min}$: A strict policy-defined minimum fulfillment threshold (e.g., 0.10 or 10 percent) guaranteeing a baseline survival allocation for every node.
+    \item $\varepsilon$: A situational tolerance threshold used post-optimization to evaluate envy-freeness between nodes.
+\end{itemize}
+
+\subsection{Decision Variables}
+\subsubsection{Stage 1 Variables (Hub Activation)}
+\begin{itemize}
+    \item $y_i \in \{0,1\}$: Binary variable; $1$ if supply hub $i$ is activated, $0$ otherwise.
+\end{itemize}
+
+\subsubsection{Stage 2 Variables (Resource Allocation)}
+\begin{itemize}
+    \item $x_{ijr} \ge 0$: Continuous decision variable representing the quantity of commodity $r \in R$ allocated from supply hub $i$ to demand node (barangay) $j$.
+    \item $w_{jr} \ge 0$: Continuous auxiliary variable representing the total quantity of commodity $r$ successfully received by barangay $j$.
+    \item $\phi_{jr} \in [0, 1]$: Continuous auxiliary variable representing the demand fulfillment ratio for commodity $r$ at barangay $j$.
+    \item $z_{jr} \ge 0$: Continuous auxiliary variable representing the linearized deprivation cost penalty incurred for commodity $r$ at barangay $j$.
+    \item $\Phi_{\min} \ge 0$: Continuous auxiliary variable representing the minimum fulfillment ratio achieved across the entire network (utilized strictly during post-hoc Max-Min baseline evaluations).
+\end{itemize}
+
+\subsubsection{Objective Function}
+The model optimizes exactly one objective function: minimizing the total vulnerability-weighted humanitarian deprivation across all commodities:
+\begin{equation}
+    \text{Minimize } Z = \sum_{j \in J} P_j \sum_{r \in R} z_{jr}
+    \label{eq:objective}
+\end{equation}
+Subject to the piecewise linearization constraints:
+\begin{equation}
+    z_{jr} \ge m_{kr} \cdot (1 - \phi_{jr}) + b_{kr}, \qquad \forall j \in J, \; \forall r \in R, \; \forall k \in K
+    \label{eq:piecewise_linearization}
+\end{equation}
+where $K = \{1, \dots, 20\}$ is the set of tangent segments under-approximating the convex deprivation curve $g_r(\phi_{jr}) = e^{\lambda_r(1-\phi_{jr})} - 1$. Because the objective minimizes $Z$, the solver naturally pushes $z_{jr}$ down to the highest active tangent plane, tracing the convex penalty without introducing non-linear mathematics into the solver.
+
+\subsection{Operational Constraints}
+To ensure the solution is physically viable, the model is bound by the following conservation and capacity rules:
+
+\textbf{1. Hub Activation Limit:} The total number of active supply hubs cannot exceed the operational capacity of local authorities.
+\begin{equation}
+    \sum_{i \in I} y_i \le H_{\max}
+    \label{eq:hub_limit}
+\end{equation}
+
+\textbf{2. Supply Capacity \& Activation Link Constraint:} Total resources distributed from any supply source cannot exceed its available inventory.
+\begin{equation}
+    \sum_{j \in J} x_{ijr} \le S_{ir} \cdot y_i, \qquad \forall i \in I, \; \forall r \in R
+    \label{eq:supply_capacity}
+\end{equation}
+
+\textbf{3. Total Allocation Definition:} The total resources received by a specific barangay is equal to the sum of all resources sent to it across all supply sources.
+\begin{equation}
+    w_{jr} = \sum_{i \in I} x_{ijr}, \qquad \forall j \in J, \; \forall r \in R
+    \label{eq:total_allocation}
+\end{equation}
+
+\textbf{4. Fulfillment Ratio Definition:} Translates absolute resource quantities into a normalized percentage of demand met.
+\begin{equation}
+    w_{jr} = \phi_{jr} \cdot D_{jr}, \qquad \forall j \in J, \; \forall r \in R
+    \label{eq:fulfillment_ratio}
+\end{equation}
+
+\textbf{5. Universal Anti-Starvation Floor and Anti-Hoarding:} A structural constraint ensuring that no node receives an allocation exceeding 100\% of its demand, preventing mathematical over-allocation while other nodes remain deprived.
+\begin{equation}
+    \varepsilon_{\min} \le \phi_{jr} \le 1.0, \qquad \forall j \in J, \; \forall r \in R
+    \label{eq:floor_ceiling_bounds}
+\end{equation}
+
+\noindent \textit{Implementation Note on Constraint Elasticity:} While Constraint (3.19) enforces a hard policy floor ($\phi_{jr} \ge \varepsilon_{\min} = 0.10$), practical operational deployments under catastrophic supply insolvency (where active hub inventory falls below the $10\%$ aggregate survival threshold) can replace this constraint with its elastic equivalent ($\phi_{jr} + \xi_{jr} \ge \varepsilon_{\min}$) penalizing $\xi_{jr}$ by $M \cdot \xi_{jr}$ in the objective function. This guarantees continuous model solvability during extreme supply collapse while preserving strict population- and hazard-weighted allocation priorities.
+
+
+\textbf{6. Non-Negativity Constraints:} Establishes the physical bounds of the decision variables, preventing the generation of negative shipments:
+\begin{equation}
+    x_{ijr} \ge 0, \qquad \forall i \in I, \; \forall j \in J, \; \forall r \in R
+    \label{eq:non_negativity}
+\end{equation}
+
+\textbf{7. Minimum Fulfillment Bound (Anti-Starvation Constraint):} To ensure the objective function evaluating Nash Fairness remains mathematically defined, and to guarantee a baseline level of humanitarian relief, every demand node must receive a strictly positive minimum allocation threshold, $\varepsilon_{\min}$.
+\begin{equation}
+    \phi_j \ge \varepsilon_{\min}, \qquad \forall j \in J
+    \label{eq:nash_anti_starvation}
+\end{equation}
+
+\subsection{Fairness Evaluation Metrics and Baseline Formulations}
+Once the primary deprivation-minimizing model is solved, the resulting allocation vector $\Phi^*$ is evaluated against the following post-hoc fairness metrics. Additionally, metrics (2)–(4) represent alternative objective formulations used to construct the comparative baseline models in Section 3.8.3.
+
+\textbf{1. Pareto-Efficiency:} Guaranteed as a structural property of minimizing the strictly convex Deprivation Cost Function. The final allocation state $\Phi^*$ is inherently Pareto-efficient, meaning no node's allocation can be increased without decreasing another's.
+
+\textbf{2. Max Utilitarian Efficiency:} An alternative objective that maximizes the total aggregate fulfillment across all nodes, prioritizing overall system output over individual equity.
+\begin{equation}
+    \text{Maximize } \sum_{j \in J} \sum_{r \in R} \phi_{jr}
+    \label{eq:max_utilitarian}
+\end{equation}
+
+\textbf{3. Pure Egalitarianism:} A strict operational constraint that enforces absolute equality in fulfillment ratios across all nodes, regardless of varying baseline demands.
+\begin{equation}
+    \phi_{jr} = \phi_{kr}, \qquad \forall j, k \in J, \; \forall r \in R
+    \label{eq:pure_egalitarian}
+\end{equation}
+
+\textbf{4. Max-Min Fair Share:} Maximizes the minimum fulfillment ratio across the entire network, mathematically guaranteeing that the worst-off barangay is prioritized before surplus is distributed elsewhere \cite{vitoriano2011}.
+\begin{equation}
+    \text{Maximize } \Phi_{\min} \quad \text{subject to } \phi_{jr} \geq \Phi_{\min}, \qquad \forall j \in J, \; \forall r \in R
+    \label{eq:max_min_fairness}
+\end{equation}
+
+\textbf{5. Max Leximin Fairness:} Verified iteratively by sorting the optimal fulfillment vector into ascending order $\phi_{(1)} \le \phi_{(2)} \dots \le \phi_{(|J|)}$ to determine if the solver optimally prioritized the sequence of the most deprived nodes. 
+
+\textbf{6. Max Nash Fairness:} Actively maximizes the product of all fulfillment ratios. In linear programming applications, this is approximated via logarithmic transformation to maintain convexity while heavily penalizing unserved nodes \cite{vitoriano2011}.
+\begin{equation}
+    \text{Maximize } \sum_{j \in J} \sum_{r \in R} \ln(\phi_{jr})
+    \label{eq:max_nash}
+\end{equation}
+
+\textbf{7. Envy-Freeness (Treatment of Equals):} In disaster relief with heterogeneous hazard exposure, enforcing envy-freeness across unequal nodes is conceptually invalid, as high-hazard communities rightfully receive greater priority. Here, envy-freeness is evaluated strictly among demand nodes belonging to the same flood hazard susceptibility tier:
+\begin{equation}
+    |\phi_{jr} - \phi_{kr}| \le \varepsilon, \qquad \forall j, k \in J \text{ such that } \text{Rating}_j = \text{Rating}_k, \; \forall r \in R
+    \label{eq:envy_freeness}
+\end{equation}
+
+\section{Data Gathering and Parameter Calibration Procedures}
+To parameterize the optimization model, empirical and standard data were sourced and processed as follows:
+\begin{itemize}
+    \item \textbf{Demand Estimation ($D_{jr}$):} Baseline commodity demands were computed by multiplying the official 2024 POPCEN barangay population records from the Philippine Statistics Authority (PSA) by the Sphere Project Minimum Humanitarian Standards ($15.0\text{ L/person/day}$ of potable water and $2{,}100.0\text{ kcal/person/day}$ of emergency nutritional food).
+    \item \textbf{Vulnerability Prioritization ($P_j$):} Priority weights were derived by combining official PSA census counts with the 182-barangay flood hazard susceptibility dataset from the Davao City CDRRMO and Project NOAH, normalized to form a strictly positive composite population-hazard index ($P_j > 0, \sum P_j = 1.0$).
+    \item \textbf{Supply Inventory ($S_{ir}$):} Because empirical warehouse stock records from the City Disaster Risk Reduction and Management Office (CDRRMO) were unavailable, prepositioned emergency stock limits were parameterized as an illustrative baseline benchmark covering 50\% of aggregate city-wide daily demand (13,867,102~L of potable water and 1,941,394,350~kcal of food) and distributed uniformly across six candidate regional DRRMOC staging facilities along primary population corridors (see Section~3.3.2.1).
+    \item \textbf{Deprivation Calibration ($\lambda_r, m_{kr}, b_{kr}$):} The exponential deprivation escalation rates were established based on human survival physiology ($\lambda_{\text{water}} = 2.0$ for acute dehydration vs. $\lambda_{\text{food}} = 0.5$ for caloric deficit). Piecewise linear tangent slopes ($m_{kr}$) and intercepts ($b_{kr}$) were pre-computed across 21 uniform breakpoint intervals ($\Delta \phi = 0.05$ from $0.0$ to $1.0$) to construct a certified 20-segment convex relaxation prior to execution.
+\end{itemize}
+
+
+\section{Computational Setup and Validation}
+\label{sec:computational_setup}
+
+This section outlines the computational infrastructure, reproducibility protocols, baseline benchmarks, performance and quality metrics, and the statistical evaluation framework used to implement and validate the proposed Two-Stage MILP model.
+
+% ----------------------------------------------------------------------
+% 3.6.1 Hardware and Software Environment
+% ----------------------------------------------------------------------
+\subsection{Hardware and Software Environment}
+\label{sec:hardware_software}
+All data preprocessing, algebraic modeling, optimization solves, and post-hoc statistical analyses were executed on a dedicated, standardized local computational testbed. The exact hardware and software specifications are detailed in Table~\ref{tab:hardware_software}.
+
+\begin{table}[htbp]
+\centering
+\caption{Computational Hardware and Software Specifications}
+\label{tab:hardware_software}
+\small
+\begin{tabular}{ll}
+\hline
+\textbf{Component} & \textbf{Specification} \\
+\hline
+\multicolumn{2}{l}{\textit{Hardware Specifications}} \\
+Processor (CPU) & 12th Gen Intel\textsuperscript{\textregistered} Core\textsuperscript{TM} i5-12500H \\
+                & 12 Cores (4 Performance Cores, 8 Efficient Cores), 16 Threads \\
+                & Base clock: 2.50 GHz, Boost clock: up to 4.50 GHz \\
+System Memory (RAM) & 8.00 GB DDR4 / LPDDR5 \\
+Graphics Processing (GPU) & Intel\textsuperscript{\textregistered} Iris\textsuperscript{\textregistered} X\textsuperscript{e} Graphics \\
+Storage & NVMe M.2 Solid State Drive (PCIe Gen 4) \\
+\hline
+\multicolumn{2}{l}{\textit{Software Specifications}} \\
+Operating System & Microsoft Windows 11 Home / Pro (64-bit, Build 26200) \\
+Programming Language & Python 3.13.5 (64-bit AMD64) \\
+Algebraic Modeling System & Pyomo 6.10.1 \\
+Primary MIP Solver & HiGHS (\texttt{highspy}) via Pyomo's \texttt{appsi\_highs} interface \\
+Fallback Solvers & COIN-OR Branch and Cut (CBC 2.10+), GLPK 5.0+ \\
+Data Analysis Libraries & pandas 3.0.2, openpyxl 3.1.5 \\
+Statistical Libraries & SciPy 1.15+, NumPy 2.0+ \\
+\hline
+\end{tabular}
+\end{table}
+
+% ----------------------------------------------------------------------
+% 3.6.2 Version Control and Reproducibility
+% ----------------------------------------------------------------------
+\subsection{Version Control and Reproducibility}
+\label{sec:reproducibility}
+To facilitate verification, algorithmic transparency, and independent replication, the complete codebase, test suite, and PSA census data are publicly maintained under Git version control on GitHub:
+\begin{center}
+    \url{https://github.com/JanKennethGerona/CS-ThesisWriting2}
+\end{center}
+
+The repository is structured into modular packages:
+\begin{itemize}
+    \item \texttt{data/}: Houses the baseline PSA 2024 POPCEN census workbook (\texttt{Davao\_City\_Barangays\_PSA\_PSGC\_2026\_with\_Model\_Columns.xlsx}), Sphere minimum standards, and MGB reference documents.
+    \item \texttt{src/}: Encapsulates the core optimization engine, including data validation (\texttt{data\_loader.py}), the two-stage MILP Pyomo model (\texttt{davao\_rap\_milp.py}), post-hoc fairness metrics (\texttt{fairness.py}), and disaster scenario engines (\texttt{scenarios.py}).
+    \item \texttt{tests/}: Contains an automated verification suite (\texttt{test\_pipeline.py}) comprising 46 unit and integration test assertions.
+    \item \texttt{results/}: Stores exported barangay allocation schedules (\texttt{barangay\_allocations.csv}) and run metrics (\texttt{summary\_metrics.json}).
+    \item \texttt{README.md}: Contains step-by-step setup documentation, environment configuration, dependency installation via \texttt{pip install -r requirements.txt}, and commands for running minimal working examples.
+\end{itemize}
+
+A minimal working example executing the full 182-barangay multi-commodity pipeline can be run from the terminal using:
+\begin{verbatim}
+    python main.py
+\end{verbatim}
+
+% ----------------------------------------------------------------------
+% 3.6.3 Baseline Selection and Comparative Models
+% ----------------------------------------------------------------------
+\subsection{Baseline Selection and Comparative Models}
+\label{sec:baselines}
+To rigorously evaluate the allocation decisions generated by the proposed Deprivation-Minimizing MILP, its performance was compared against four standard baseline allocation policies derived from the humanitarian logistics literature reviewed in Chapter 2:
+
+\begin{table}[htbp]
+\centering
+\caption{Operational Disaster Evaluation Scenarios (Parameter Specifications)}
+\label{tab:disaster_scenarios}
+\small
+\resizebox{\textwidth}{!}{%
+\begin{tabular}{llccp{4.2cm}l}
+\hline
+\textbf{Scenario ID} & \textbf{Scenario Name} & \textbf{Stock Factor ($\alpha$)} & \textbf{Effective Supply\textsuperscript{*}} & \textbf{Spatial / Demand Profile} & \textbf{Operational Focus} \\ \hline
+SC-01 & Baseline Normal & $1.00$ ($100\%$) & $33.3\%$ of Demand & Uniform across 182 barangays & Standard operational benchmark \\
+SC-02 & Moderate Scarcity & $0.75$ ($75\%$) & $25.0\%$ of Demand & Uniform across 182 barangays & Optimization under mild deficit \\
+SC-03 & Severe Scarcity & $0.50$ ($50\%$) & $16.7\%$ of Demand & Uniform across 182 barangays & Deprivation trade-off testing \\
+SC-04 & Extreme Crisis & $0.25$ ($25\%$) & $\mathbf{8.3\%}$ of Demand & Uniform across 182 barangays & Policy insolvency ($< 10\%$ floor) \\
+SC-05 & Uneven Surge & $1.00$ ($100\%$) & $33.3\%$ of Demand & Top $20\%$ population surges $1.5\times$ & Localized surge reallocation \\
+SC-06 & Water-Critical & Water $0.40$, Food $1.00$ & Water $13.3\%$, Food $33.3\%$ & Asymmetric commodity disruption & Acute dehydration prioritization \\
+SC-07 & Food Shortage & Water $1.00$, Food $0.40$ & Water $33.3\%$, Food $13.3\%$ & Asymmetric commodity disruption & Caloric deficit management \\ \hline
+\end{tabular}%
+}
+\vspace{0.1cm}
+\footnotesize{\newline \textsuperscript{*}Effective Active Supply reflects throughput across the $H_{\max} = 4$ active hubs ($\frac{4}{6} \times 50\% \times \alpha$). In SC-04, effective supply ($8.3\%$) falls below the universal $10\%$ survival floor ($\varepsilon_{\min} = 0.10$), mathematically certifying systemic insolvency.}
+\end{table}
+
+
+\paragraph{1. Proportional Allocation Baseline (Operational Default):}
+In conventional disaster management, relief aid is typically apportioned uniformly based on population or raw demand without vulnerability weighting:
+\begin{equation}
+    w_{jr}^{\text{prop}} = D_{jr} \times \min\left(1.0, \; \frac{\sum_{i \in I} S_{ir}}{\sum_{k \in J} D_{kr}}\right), \quad \forall j \in J, \; r \in R 
+\end{equation}
+yielding an identical percentage fulfillment ratio $\phi_{jr}^{\text{prop}} = \text{constant}$ across all nodes.
+\begin{itemize}
+    \item \textbf{Justification for Selection:} As highlighted in Chapter 2 \citep{balcik2010, cui2010}, proportional sharing is the prevailing heuristic used when decision-makers lack centralized optimization tools. It establishes the status-quo operational benchmark against which the benefits of mathematical optimization and vulnerability prioritization are measured.
+\end{itemize}
+
+\paragraph{2. Weighted-Proportional Allocation Baseline (Heuristic Equity Benchmark):}
+To isolate the benefit of non-linear optimization from the mere presence of vulnerability weights, this baseline apportions available supplies in proportion to each barangay's composite priority weight ($P_j$):
+\begin{equation}
+    w_{jr}^{\text{wprop}} = D_{jr} \times \min\left(1.0, \; \max\left(\varepsilon_{\min}, \; \frac{P_j \cdot \sum_{i \in I} S_{ir} \cdot y_i^*}{\sum_{k \in J} P_k D_{kr}}\right)\right), \quad \forall j \in J, \; r \in R 
+\end{equation}
+subject to the anti-starvation floor ($\varepsilon_{\min} = 0.10$).
+\begin{itemize}
+    \item \textbf{Justification for Selection:} This baseline evaluates whether a simple heuristic rule based on $P_j$ can achieve comparable fairness without solving an optimization model. Demonstrating that the proposed MILP outperforms the weighted-proportional baseline proves that non-linear convex deprivation minimization provides structural equity gains that linear heuristic weighting cannot achieve.
+\end{itemize}
+
+\paragraph{3. Utilitarian Allocation Baseline (Ratio Efficiency Upper Bound):} 
+This baseline maximizes aggregate demand fulfillment ratios across all barangays without equity weighting, defining the theoretical upper limit of normalized system throughput:
+\begin{equation}
+    \text{Maximize} \sum_{j \in J} \sum_{r \in R} \phi_{jr}
+\end{equation}
+subject to hub capacity and anti-starvation constraints ($\phi_{jr} \ge \varepsilon_{\min}$):
+\begin{align}
+    \sum_{j \in J} x_{ijr} &\le S_{ir} \cdot y_i, \quad \forall i \in I, \; \forall r \in R, \\
+    w_{jr} &= \sum_{i \in I} x_{ijr} = \phi_{jr} D_{jr}, \quad \forall j \in J, \; \forall r \in R, \\
+    \varepsilon_{\min} &\le \phi_{jr} \le 1.0, \quad \forall j \in J, \; \forall r \in R.
+\end{align}
+\begin{itemize}
+    \item \textbf{Justification for Selection and Mathematical Distinction:} Standard welfare economics defines utilitarianism as aggregate utility maximization \citep{vitoriano2011, gutjahr2018}. Note that maximizing gross volume distributed ($\sum_{j,r} w_{jr}$) cannot serve as an optimization objective under fixed supply, as any allocation exhausting available warehouse stocks yields an identical sum. Instead, formulation (3.29) maximizes normalized satisfaction $\sum_{j,r} \phi_{jr} = \sum_{j,r} (w_{jr} / D_{jr})$. Comparing against this benchmark isolates the ``price of fairness''---the aggregate fulfillment sacrificed when elevating vulnerable and heavily populated nodes above the anti-starvation threshold.
+    \item \textbf{Small-Demand Prioritization Bias:} In formulation (3.29), maximizing normalized satisfaction $\sum \phi_{jr}$ creates a marginal objective gain of $\frac{\partial \phi_{jr}}{\partial w_{jr}} = \frac{1}{D_{jr}}$. Consequently, an unweighted utilitarian solver encounters a strong mathematical incentive to allocate scarce resources preferentially to small-demand barangays (where minimal commodity volume yields a full $100\%$ jump in $\phi_{jr}$), while locking large-population urban barangays at the $\varepsilon_{\min} = 0.10$ floor.
+\end{itemize}
+
+\paragraph{4. Max-Min / Egalitarian Baseline (Strict Equity):}
+Rooted in Rawlsian distributive justice (Section 2.1.1), this formulation maximizes the fulfillment of the single worst-off barangay:
+\begin{equation}
+    \text{Maximize} \; \theta \quad \text{subject to} \quad \phi_{jr} \ge \theta, \quad \forall j \in J, \; r \in R
+\end{equation}
+subject to standard hub capacity, conservation, and floor constraints ($\phi_{jr} \ge \varepsilon_{\min}$).
+\begin{itemize}
+    \item \textbf{Justification for Selection:} This baseline represents the strict egalitarian extreme. It benchmarks whether enforcing absolute parity across all nodes inadvertently harms endangered populations during severe resource deficits by holding all barangays down to the level of the most constrained community.
+\end{itemize}
+
+\subsection{Computational Performance and Solution Quality Metrics}
+\label{sec:performance_metrics}
+
+\subsubsection{Computational Execution Metrics}
+Unlike heuristic search or machine learning algorithms that rely heavily on graphical processing units (GPUs), exact Mixed-Integer Linear Programming (MILP) solvers execute deterministic linear algebra and combinatorial tree search exclusively on CPU architectures. Accordingly, computational performance is assessed using execution metrics specific to Operations Research:
+
+\begin{enumerate}
+    \item \textbf{Wall-Clock Solve Time ($T_{\text{solve}}$) vs. Model Construction Time ($T_{\text{build}}$):}
+    To distinguish between Python runtime overhead and actual mathematical search effort, execution time is partitioned:
+    \begin{itemize}
+        \item $T_{\text{build}}$: The elapsed time required for Pyomo to instantiate the algebraic constraint network across all 182 barangays, candidate hubs, and piecewise linear segments.
+        \item $T_{\text{solve}}$: The raw time spent by the compiled C++ HiGHS solver executing presolve, LP simplex relaxations, and branch-and-cut exploration.
+    \end{itemize}
+    Both intervals are measured using monotonic high-resolution timers (\texttt{time.perf\_counter()}).
+    
+    \item \textbf{Branch-and-Bound Node Count ($N_{\text{nodes}}$) and Simplex Iterations:}
+    Recognized in mathematical optimization literature as hardware-independent indicators of problem difficulty, the solver reports:
+    \begin{itemize}
+        \item Total branch-and-bound tree nodes explored before certifying optimality.
+        \item Cumulative dual and primal simplex iterations performed.
+    \end{itemize}
+    These metrics provide an exact, solver-internal assessment of combinatorial complexity that remains unaffected by hardware clock variations.
+    
+    \item \textbf{Peak Memory Utilization ($M_{\text{peak}}$):}
+    The maximum resident set size (RSS, in Megabytes) utilized by the Python process and solver working tree, tracked via \texttt{psutil}. Demonstrating that $M_{\text{peak}}$ remains well within the capacity of standard municipal computers ($\le 8\text{ GB}$) confirms that the system can be deployed on standard local government hardware without cluster dependencies.
+\end{enumerate}
+
+\paragraph{Accounting for System Noise and Thermal Variance:}
+Because operating system interrupts, CPU thread scheduling, and dynamic thermal throttling introduce timing fluctuations, execution benchmarks follow three noise-control safeguards:
+\begin{enumerate}
+    \item \textbf{Hardware-Agnostic Validation:} Primary algorithmic complexity is documented via deterministic solver iterations and branch-and-bound node counts, which exhibit zero variance across runs.
+    \item \textbf{Multi-Replicate Sampling ($N = 30$):} Each disaster scenario is solved over $N = 30$ independent runs. Execution times are reported as the \textbf{Median} and \textbf{Interquartile Range (IQR)}, filtering out transient OS interrupts.
+    \item \textbf{Cold-Start Elimination:} A warm-up pass is performed prior to recording measurements to ensure all Python modules and PSA census workbooks are resident in memory cache.
+\end{enumerate}
+
+\subsubsection{Solution Quality and Optimality Metrics}
+The mathematical integrity and precision of the allocation outputs are evaluated using:
+\begin{enumerate}
+    \item \textbf{MIP Optimality Gap ($\text{Gap}_{\text{MIP}}$):} The relative distance between the best discovered integer objective ($Z_{\text{UB}}$) and the validated branch-and-cut dual lower bound ($Z_{\text{LB}}$):
+    \begin{equation}
+        \text{Gap}_{\text{MIP}} = \frac{|Z_{\text{UB}} - Z_{\text{LB}}|}{Z_{\text{UB}}} \times 100\%
+    \end{equation}
+    Optimality is certified when $\text{Gap}_{\text{MIP}} \le 10^{-4}$ ($0.01\%$).
+    
+    \item \textbf{Piecewise Tangent Approximation Error ($\Delta_{\text{approx}}$):} 
+    The maximum pointwise error between the linearized epigraph cuts ($z_{jr}$) and the true exponential deprivation curve:
+    \begin{equation}
+        \Delta_{\text{approx}} = \max_{j \in J, \, r \in R} \left( e^{\lambda_r(1 - \phi_{jr})} - z_{jr} \right)
+    \end{equation}
+    
+    Across all 182 barangays, this error remained strictly bounded at $\Delta_{\text{approx}} \le 0.005833$ (relative error $< 1.99\%$ for potable water and $< 0.50\%$ for emergency food), validating the high fidelity of the 20-segment ($N_{\text{bp}} = 21$) convex relaxation.
+
+    
+    \item \textbf{Operational Feasibility Auditing:} Each solution vector is programmatically validated against eight structural conservation checks (hub capacities, supply bounds, and universal anti-starvation compliance).
+\end{enumerate}
+
+\subsubsection{Neutral Multi-Criteria Distributive Equity Suite}
+To prevent circular evaluation bias (where the proposed model wins merely because performance is measured by its own objective function), all competing models are evaluated across an independent suite of neutral criteria:
+\begin{enumerate}
+    \item \textbf{Worst-Off Barangay Fulfillment ($\phi_{\min}$):} Measures the minimum fulfillment ratio achieved across all 182 barangays ($\phi_{\min} = \min_{j \in J, r \in R} \phi_{jr}$), evaluating strict Rawlsian max-min protection.
+    \item \textbf{Fulfillment Gini Coefficient ($G_\phi$):} Measures distributive inequality across the municipal network:
+    \begin{equation}
+        G_\phi = \frac{\sum_{j \in J} \sum_{k \in J} |\phi_j - \phi_k|}{2 |J| \sum_{j \in J} \phi_j}.
+    \end{equation}
+    A value of $G_\phi = 0$ represents absolute equality, while higher values indicate severe spatial disparity.
+    \item \textbf{Floor-Bound Population Ratio ($f_{\text{floor}}$):} The percentage of barangays restricted to the bare survival floor ($\phi_{jr} = \varepsilon_{\min} = 0.10$), quantifying how many communities were sacrificed to satisfy demand elsewhere.
+    \item \textbf{Hazard-Tier Parity Ratio ($\Delta_{\text{hazard}}$):} The ratio of mean fulfillment in High-Hazard river corridors versus Minimal-Hazard upland zones ($\overline{\phi}_{\text{High}} / \overline{\phi}_{\text{Minimal}}$), verifying whether the allocation actively shields vulnerable populations during disasters.
+    \item \textbf{Nash Social Welfare ($W_{\text{Nash}}$):} The sum of logarithmic fulfillments ($\sum_{j \in J} \sum_{r \in R} \ln \phi_{jr}$), representing the geometric mean balance between aggregate efficiency and decentralized equity.
+\end{enumerate}
+
+
+
+% ----------------------------------------------------------------------
+% 3.6.5 Statistical Model Comparison Framework
+% ----------------------------------------------------------------------
+\subsection{Statistical Model Comparison Framework}
+\label{sec:statistical_tests}
+To determine whether the proposed Deprivation-Minimizing MILP produces statistically significant improvements over the comparative baselines, non-parametric hypothesis tests were conducted across the 182 barangays and 7 disaster scenarios. Because disaster fulfillment ratios exhibit severe boundary piling at $\varepsilon_{\min} = 0.10$ and $1.0$, normality is violated, necessitating non-parametric statistics.
+
+\noindent \textit{Methodological Note on Inferential Testing vs. Census Optimization:} Because this study models all 182 administrative barangays of Davao City, the dataset represents the complete population census rather than an empirical sample drawn from an infinite population. Primary analytical conclusions are therefore based on descriptive distributions, medians, interquartile ranges (IQR), and fulfillment boxplots. Non-parametric inferential tests (Friedman, Nemenyi, and Wilcoxon signed-rank tests) are reported strictly as secondary sensitivity checks to certify that observed allocation shifts across baseline models are algorithmically distinct.
+
+\paragraph{1. Multi-Model Comparison: The Friedman Test} To test for statistically significant performance differences across all five competing formulations simultaneously (Proposed Model, Proportional, Weighted-Proportional, Utilitarian, and Egalitarian Baselines), the non-parametric \textbf{Friedman Test} was employed:
+\begin{equation}
+    \chi^2_F = \frac{12}{nk(k + 1)} \sum_{m=1}^k R_m^2 - 3n(k + 1)
+\end{equation}
+where $k = 5$ represents the number of competing models, $n = 182$ represents the administrative barangays, and $R_m$ is the sum of ranks for model $m$. Under $k - 1 = 4$ degrees of freedom, a $p$-value $< 0.05$ rejects the null hypothesis of equivalent allocation behavior.
+
+\paragraph{Post-Hoc Pairwise Testing: The Nemenyi Test}
+Upon rejecting the Friedman null hypothesis, the post-hoc **Nemenyi Test** identifies which pairs of models differ significantly. Two models are declared significantly different if their average rank difference exceeds the Critical Difference ($CD$):
+\begin{equation}
+    CD = q_\alpha \sqrt{\frac{k(k + 1)}{6n}}
+\end{equation}
+where critical value $q_\alpha$ is derived from the Studentized range distribution ($\alpha = 0.05$).
+
+\paragraph{2. Pairwise Scenario Comparison: Wilcoxon Signed-Rank Test}
+For matched pairwise comparisons between the proposed model ($A$) and the primary operational baseline ($B$) on individual disaster scenarios, the **Wilcoxon Signed-Rank Test** was used. For differences $d_j = \phi_j^{(A)} - \phi_j^{(B)}$, the test statistic $W$ sums the positive ranks:
+\begin{equation}
+    W = \sum_{d_j > 0} \text{Rank}(|d_j|)
+\end{equation}
+Using the large-sample normal approximation ($n = 182$), the standardized $Z$-statistic is computed as:
+\begin{equation}
+    Z = \frac{W - \frac{n(n + 1)}{4}}{\sqrt{\frac{n(n + 1)(2n + 1)}{24}}}
+\end{equation}
+A two-tailed $p$-value $< 0.05$ establishes that allocation shifts induced by the proposed model are statistically significant.
